@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notepad Web</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Quill Rich Text Editor -->
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📝 Notepad Web</h1>
+            <div class="header-actions">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search notes...">
+                    <span class="search-icon">🔍</span>
+                </div>
+                <a href="{{ url_for('main.export_pdf') }}" class="btn btn-export">📄 Export All as PDF</a>
+                <a href="{{ url_for('main.note_new') }}" class="btn btn-primary">+ New Note</a>
+                <label class="view-toggle" title="Toggle list/tile view">
+                    <input type="checkbox" id="viewToggle">
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-label">☰</span>
+                </label>
+            </div>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% if notes %}
+            <div class="notes-grid" id="notesGrid">
+                {% for note in notes %}
+                <div class="note-card">
+                    <div class="note-header">
+                        <h3 class="note-title">
+                            <a href="{{ url_for('main.note_edit', note_id=note.id) }}" class="note-title-link">{{ note.title }}</a>
+                        </h3>
+                        <div class="note-actions">
+                            <a href="{{ url_for('main.note_edit', note_id=note.id) }}" class="btn btn-small">✏️ Edit</a>
+                            <a href="{{ url_for('main.export_single_pdf', note_id=note.id) }}" class="btn btn-small btn-export" title="Export as PDF">📄 PDF</a>
+                            <form method="post" action="{{ url_for('main.note_delete', note_id=note.id) }}" class="inline-form" onsubmit="return confirm('Delete this note?')">
+                                <button type="submit" class="btn btn-small btn-delete">🗑️</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="note-content">{{ note.get_preview() }}</div>
+                    <div class="note-meta">
+                        <span>Created: {{ note.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                        <span>Updated: {{ note.updated_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <p>No notes yet. Create your first note!</p>
+                <a href="{{ url_for('main.note_new') }}" class="btn btn-primary">+ New Note</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        const toggle = document.getElementById('viewToggle');
+        const grid = document.getElementById('notesGrid');
+        const searchInput = document.getElementById('searchInput');
+
+        // Load saved preference
+        const savedView = localStorage.getItem('notepadView');
+        if (savedView === 'list') {
+            toggle.checked = true;
+            grid.classList.add('list-view');
+        }
+
+        toggle.addEventListener('change', function() {
+            if (this.checked) {
+                grid.classList.add('list-view');
+                localStorage.setItem('notepadView', 'list');
+            } else {
+                grid.classList.remove('list-view');
+                localStorage.setItem('notepadView', 'grid');
+            }
+        });
+
+        // Search functionality
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase().trim();
+                const cards = grid.querySelectorAll('.note-card');
+                let visibleCount = 0;
+
+                cards.forEach(card => {
+                    const title = card.querySelector('.note-title')?.textContent.toLowerCase() || '';
+                    const content = card.querySelector('.note-content')?.textContent.toLowerCase() || '';
+                    const matches = !query || title.includes(query) || content.includes(query);
+                    card.style.display = matches ? '' : 'none';
+                    if (matches) visibleCount++;
+                });
+
+                // Show empty state if no results
+                let emptyState = grid.parentElement.querySelector('.empty-state');
+                if (visibleCount === 0 && query) {
+                    if (!emptyState) {
+                        emptyState = document.createElement('div');
+                        emptyState.className = 'empty-state';
+                        grid.parentElement.appendChild(emptyState);
+                    }
+                    emptyState.style.display = 'block';
+                    emptyState.innerHTML = `<p>No notes found for "${query}"</p>`;
+                } else if (emptyState) {
+                    emptyState.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

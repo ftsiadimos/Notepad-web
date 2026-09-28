@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if note %}Edit Note{% else %}New Note{% endif %} - Notepad Web</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Quill Rich Text Editor -->
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>{% if note %}✏️ Edit Note{% else %}📝 New Note{% endif %}</h1>
+            <a href="{{ url_for('main.index') }}" class="btn btn-secondary">← Back to Notes</a>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="post" class="note-form" id="noteForm">
+            <div class="form-group">
+                <label for="title">Title</label>
+                <input type="text" id="title" name="title" required
+                       value="{{ note.title if note else '' }}"
+                       placeholder="Enter note title...">
+            </div>
+
+            <div class="form-group">
+                <label for="content">Content</label>
+                <div id="editor">
+                </div>
+                <div style="margin-top: 8px; display: flex; gap: 8px;">
+                    <button type="button" id="cleanInlineFormatBtn" class="btn btn-small" style="background-color: #e8f4f8; color: #2980b9;">
+                        🧹 Clean Inline Format (Bold, Italic, Colors)
+                    </button>
+                    <button type="button" id="removeAllFormatBtn" class="btn btn-small" style="background-color: #ffe4e1; color: #e74c3c;">
+                        ✗ Remove All Format
+                    </button>
+                </div>
+                <input type="hidden" name="content" id="content-input">
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">💾 Save Note</button>
+                <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+
+        <!-- Store note content data outside form for JS access -->
+        <script type="application/json" id="editor-initial-content">
+            {{ note.content | tojson if note and note.content else '""' }}
+        </script>
+    </div>
+
+    <!-- Quill Rich Text Editor -->
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+    <script>
+        // Store the content in a global variable
+        let noteContent = '';
+        const contentScript = document.getElementById('editor-initial-content');
+        if (contentScript && contentScript.textContent.trim()) {
+            try {
+                noteContent = JSON.parse(contentScript.textContent.trim());
+            } catch (e) {
+                console.error('Failed to parse content:', e);
+                noteContent = '';
+            }
+        }
+
+        // Initialize Quill editor
+        const quill = new Quill('#editor', {
+            theme: 'snow',
+            placeholder: 'Write your note here...',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'color': [] }, { 'background': [] }],
+                    [{ 'font': [] }],
+                    [{ 'align': [] }],
+                    ['blockquote', 'code-block'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'indent': '-1'}, { 'indent': '+1' }],
+                    ['link', 'image'],
+                    ['clean']
+                ],
+            },
+        });
+
+        // Set tooltip for clean button
+        setTimeout(() => {
+            const cleanBtn = document.querySelector('button[value="clean"]');
+            if (cleanBtn) {
+                cleanBtn.title = 'Remove inline formatting (bold, italic, colors)';
+                cleanBtn.style.backgroundColor = '#e8f4f8';
+                cleanBtn.style.color = '#2980b9';
+            }
+        }, 100);
+        if (noteContent && noteContent.length > 0) {
+            try {
+                // Use Quill's clipboard API to convert HTML to Delta
+                const delta = quill.clipboard.convert({
+                    html: noteContent
+                });
+                // Set the contents using Quill's API
+                quill.setContents(delta, 'silent');
+                console.log('✅ Content loaded successfully');
+            } catch (e) {
+                console.error('Failed to load content:', e);
+                // Fallback: try direct innerHTML
+                try {
+                    quill.root.innerHTML = noteContent;
+                } catch (e2) {
+                    console.error('Fallback also failed:', e2);
+                }
+            }
+        }
+
+        // Handle "Clean Inline Format" button - removes bold, italic, colors, etc. but keeps paragraphs, lists, etc.
+        const cleanInlineBtn = document.getElementById('cleanInlineFormatBtn');
+        if (cleanInlineBtn) {
+            cleanInlineBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const contents = quill.getContents();
+                
+                // Process each operation and remove inline formats only
+                contents.ops.forEach(op => {
+                    if (op.attributes) {
+                        // Keep block-level formats, remove inline formats
+                        const blockFormats = ['header', 'list', 'blockquote', 'code-block', 'align', 'indent'];
+                        const inlineFormats = ['bold', 'italic', 'underline', 'strike', 'color', 'background', 'font', 'size', 'link', 'script'];
+                        
+                        // Remove all inline format attributes
+                        inlineFormats.forEach(format => {
+                            delete op.attributes[format];
+                        });
+                        
+                        // Keep only block formats
+                        for (let key in op.attributes) {
+                            if (!blockFormats.includes(key)) {
+                                delete op.attributes[key];
+                            }
+                        }
+                        
+                        // If no attributes left, delete the attributes object
+                        if (Object.keys(op.attributes).length === 0) {
+                            delete op.attributes;
+                        }
+                    }
+                });
+                
+                // Set the cleaned contents
+                quill.setContents(contents, 'silent');
+                console.log('✓ Inline formatting removed - kept paragraphs, lists, blockquotes, headers');
+            });
+        }
+
+        // Handle "Remove All Format" button - removes ALL formatting, keeps only plain text
+        const removeAllBtn = document.getElementById('removeAllFormatBtn');
+        if (removeAllBtn) {
+            removeAllBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const text = quill.getText().trim();
+                quill.setContents([]);
+                quill.insertText(0, text);
+                console.log('✓ All formatting removed - plain text only');
+            });
+        }
+
+        // Sync editor content to hidden input on form submit
+        const noteForm = document.getElementById('noteForm');
+        noteForm.addEventListener('submit', function(e) {
+            const content = quill.root.innerHTML;
+            console.log('Form submitted! Quill content:', content.substring(0, 100));
+            console.log('Setting hidden input value...');
+            document.getElementById('content-input').value = content;
+            console.log('Hidden input now contains:', document.getElementById('content-input').value.substring(0, 100));
+            console.log('Form data being sent:');
+            console.log('- Title:', document.getElementById('title').value);
+            console.log('- Content length:', document.getElementById('content-input').value.length);
+        });
+
+        // Debug: Log the initial state when page loads
+        window.addEventListener('load', function() {
+            console.log('=== PAGE LOADED ===');
+            console.log('Quill content (HTML):', quill.root.innerHTML);
+            console.log('Quill content (Text):', quill.getText());
+            console.log('Hidden input value:', document.getElementById('content-input').value);
+        });
+    </script>
+</body>
+</html>
