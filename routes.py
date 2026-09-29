@@ -701,3 +701,13 @@ def debug_notes():
             'content_raw': note.content,
         })
     return {'notes': data}
+
+
+@main_bp.route('/api/notes/count', methods=['GET'])
+def notes_count():
+    """API endpoint to return total notes count."""
+    try:
+        total_notes = Note.query.count()
+        return jsonify({'total_notes': total_notes})
+    except Exception as e:
+        return jsonify({'error': f'Failed to count notes: {str(e)}'}), 500
