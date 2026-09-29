@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Notepad Web</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚙ Settings</h1>
+            <a href="{{ url_for('main.index') }}" class="btn btn-secondary">← Back to Notes</a>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}" role="alert">
+                            <span class="flash-text">{{ message }}</span>
+                            <button type="button" class="flash-close" aria-label="Close notification">&times;</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="post" class="note-form">
+            <div class="form-group">
+                <label for="ollama_url">Ollama API URL</label>
+                <input
+                    type="url"
+                    id="ollama_url"
+                    name="ollama_url"
+                    value="{{ ollama_url }}"
+                    placeholder="{{ default_url }}"
+                >
+                <small class="field-help">Used by AI helper in note editor. Example: {{ default_url }}</small>
+            </div>
+
+            <div class="form-group">
+                <label for="ollama_model">Ollama Model</label>
+                <select id="ollama_model" name="ollama_model">
+                    {% for model_name in available_models %}
+                        <option value="{{ model_name }}" {% if model_name == ollama_model %}selected{% endif %}>{{ model_name }}</option>
+                    {% endfor %}
+                </select>
+                {% if model_fetch_error %}
+                    <small class="field-help">Could not refresh models from Ollama right now. Showing fallback options. Details: {{ model_fetch_error }}</small>
+                {% else %}
+                    <small class="field-help">Loaded from your Ollama instance at {{ ollama_url }}.</small>
+                {% endif %}
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Settings</button>
+                <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Flash notifications: auto-hide and manual close
+        document.querySelectorAll('.flash').forEach((flashEl) => {
+            const closeBtn = flashEl.querySelector('.flash-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    flashEl.classList.add('flash-hiding');
+                    setTimeout(() => flashEl.remove(), 220);
+                });
+            }
+
+            setTimeout(() => {
+                if (flashEl.isConnected) {
+                    flashEl.classList.add('flash-hiding');
+                    setTimeout(() => flashEl.remove(), 220);
+                }
+            }, 4500);
+        });
+    </script>
+</body>
+</html>

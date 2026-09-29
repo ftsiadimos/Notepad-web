@@ -19,7 +19,10 @@
             {% if messages %}
                 <div class="flash-messages">
                     {% for category, message in messages %}
-                        <div class="flash flash-{{ category }}">{{ message }}</div>
+                        <div class="flash flash-{{ category }}" role="alert">
+                            <span class="flash-text">{{ message }}</span>
+                            <button type="button" class="flash-close" aria-label="Close notification">&times;</button>
+                        </div>
                     {% endfor %}
                 </div>
             {% endif %}
@@ -46,6 +49,27 @@
                     </button>
                 </div>
                 <input type="hidden" name="content" id="content-input">
+            </div>
+
+            <div class="ai-helper" id="aiHelper">
+                <div class="ai-helper-header">
+                    <h3>AI Note Assistant</h3>
+                    <a href="{{ url_for('main.settings') }}" class="btn btn-small btn-secondary">Configure Ollama</a>
+                </div>
+                <p class="ai-helper-subtitle">AI reads your current note content and suggests a revised version you can apply.</p>
+
+                <div class="form-group">
+                    <label for="aiPrompt">What should AI help with?</label>
+                    <textarea id="aiPrompt" rows="3" placeholder="Example: Turn this into clean meeting notes with action items."></textarea>
+                </div>
+
+                <div class="ai-helper-actions">
+                    <button type="button" id="aiGenerateBtn" class="btn btn-primary">Review & Recommend Changes</button>
+                    <button type="button" id="aiApplyBtn" class="btn btn-export" disabled>Apply Recommendation (Replace)</button>
+                </div>
+
+                <div id="aiStatus" class="ai-status" aria-live="polite"></div>
+                <div id="aiResponse" class="ai-response note-content" hidden></div>
             </div>
 
             <div class="form-actions">
@@ -188,12 +212,101 @@
             console.log('- Content length:', document.getElementById('content-input').value.length);
         });
 
+        // AI helper for note writing
+        const aiPromptEl = document.getElementById('aiPrompt');
+        const aiGenerateBtn = document.getElementById('aiGenerateBtn');
+        const aiApplyBtn = document.getElementById('aiApplyBtn');
+        const aiStatusEl = document.getElementById('aiStatus');
+        const aiResponseEl = document.getElementById('aiResponse');
+
+        let aiLastResponse = '';
+
+        function setAiStatus(message, isError = false) {
+            aiStatusEl.textContent = message;
+            aiStatusEl.classList.toggle('ai-status-error', isError);
+        }
+
+        async function generateAiSuggestion() {
+            const prompt = aiPromptEl.value.trim();
+            if (!prompt) {
+                setAiStatus('Please enter a request for the AI assistant.', true);
+                return;
+            }
+
+            setAiStatus('Generating suggestion from Ollama...');
+            aiGenerateBtn.disabled = true;
+            aiApplyBtn.disabled = true;
+
+            try {
+                const response = await fetch("{{ url_for('main.ai_chat') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        content_html: quill.root.innerHTML,
+                        content_text: quill.getText().trim()
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || 'AI request failed');
+                }
+
+                aiLastResponse = data.response || '';
+                aiResponseEl.innerHTML = aiLastResponse;
+                aiResponseEl.hidden = false;
+                aiApplyBtn.disabled = !aiLastResponse;
+                setAiStatus('Recommendation ready. Apply to replace current note content.');
+            } catch (error) {
+                setAiStatus(error.message || 'AI request failed.', true);
+                aiResponseEl.hidden = true;
+                aiApplyBtn.disabled = true;
+            } finally {
+                aiGenerateBtn.disabled = false;
+            }
+        }
+
+        function applyAiSuggestion() {
+            if (!aiLastResponse) {
+                return;
+            }
+
+            const delta = quill.clipboard.convert({
+                html: aiLastResponse
+            });
+            quill.setContents(delta, 'user');
+            quill.setSelection(quill.getLength(), 0, 'silent');
+            setAiStatus('Recommendation applied. Existing note content was replaced.');
+        }
+
+        aiGenerateBtn.addEventListener('click', generateAiSuggestion);
+        aiApplyBtn.addEventListener('click', applyAiSuggestion);
+
         // Debug: Log the initial state when page loads
         window.addEventListener('load', function() {
             console.log('=== PAGE LOADED ===');
             console.log('Quill content (HTML):', quill.root.innerHTML);
             console.log('Quill content (Text):', quill.getText());
             console.log('Hidden input value:', document.getElementById('content-input').value);
+        });
+
+        // Flash notifications: auto-hide and manual close
+        document.querySelectorAll('.flash').forEach((flashEl) => {
+            const closeBtn = flashEl.querySelector('.flash-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    flashEl.classList.add('flash-hiding');
+                    setTimeout(() => flashEl.remove(), 220);
+                });
+            }
+
+            setTimeout(() => {
+                if (flashEl.isConnected) {
+                    flashEl.classList.add('flash-hiding');
+                    setTimeout(() => flashEl.remove(), 220);
+                }
+            }, 4500);
         });
     </script>
 </body>

@@ -55,3 +55,13 @@ class Note(db.Model):
         if len(text) > length:
             text = text[:length] + '...'
         return text
+
+
+class AppSetting(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(100), nullable=False, unique=True, index=True)
+    value = db.Column(db.Text, nullable=False, default='')
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<AppSetting {self.key}>'

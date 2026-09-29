@@ -142,24 +142,40 @@ header h1 {
 
 .notes-grid.list-view .note-card {
     flex-direction: row;
-    align-items: center;
+    align-items: flex-start;
     padding: 12px 20px;
     gap: 15px;
 }
 
 .notes-grid.list-view .note-header {
     margin-bottom: 0;
-    min-width: 200px;
-    flex-shrink: 0;
+    width: 300px;
+    flex: 0 0 300px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 10px;
 }
 
 .notes-grid.list-view .note-title {
     font-size: 1rem;
     margin-bottom: 0;
+    min-width: 0;
 }
 
 .notes-grid.list-view .note-actions {
     flex-shrink: 0;
+}
+
+.notes-grid.list-view .note-content {
+    min-width: 0;
+    flex: 0 1 auto;
+    max-width: clamp(220px, 38vw, 520px);
+    margin-bottom: 0;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .notes-grid.list-view .note-meta {
@@ -235,6 +251,35 @@ header h1 {
     border-radius: 6px;
     margin-bottom: 10px;
     font-size: 0.95rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.flash-text {
+    flex: 1;
+}
+
+.flash-close {
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 0;
+    opacity: 0.8;
+}
+
+.flash-close:hover {
+    opacity: 1;
+}
+
+.flash-hiding {
+    opacity: 0;
+    transform: translateY(-4px);
 }
 
 .flash-success {
@@ -276,13 +321,28 @@ header h1 {
 .note-title {
     font-size: 1.2rem;
     color: #2c3e50;
-    word-break: break-word;
+    line-height: 1.3;
+    min-width: 0;
 }
 
 .note-title-link {
     color: #2c3e50;
     text-decoration: none;
     transition: color 0.2s ease;
+    display: block;
+    overflow: hidden;
+}
+
+.notes-grid:not(.list-view) .note-title-link {
+    display: -webkit-box;
+    line-clamp: 2;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.notes-grid.list-view .note-title-link {
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .note-title-link:hover {
@@ -292,8 +352,44 @@ header h1 {
 
 .note-actions {
     display: flex;
-    gap: 6px;
+    align-items: center;
+    gap: 8px;
     flex-shrink: 0;
+}
+
+.note-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 8px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-decoration: none;
+}
+
+.note-actions .btn:not(.btn-export):not(.btn-delete) {
+    background: #eef2ff;
+    color: #3730a3;
+}
+
+.note-actions .btn:not(.btn-export):not(.btn-delete):hover {
+    background: #e0e7ff;
+}
+
+.note-actions .btn-delete {
+    width: 34px;
+    min-width: 34px;
+    padding: 0;
+    font-size: 0.9rem;
+}
+
+.note-actions .btn:focus-visible,
+.note-actions .btn-delete:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
 }
 
 .note-content {
@@ -302,6 +398,14 @@ header h1 {
     margin-bottom: 15px;
     flex-grow: 1;
     word-break: break-word;
+}
+
+.notes-grid:not(.list-view) .note-content {
+    display: -webkit-box;
+    line-clamp: 2;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .note-content p {
@@ -402,9 +506,48 @@ header h1 {
     transition: border-color 0.2s ease;
 }
 
+.form-group select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e1e5eb;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-family: inherit;
+    background: white;
+    transition: border-color 0.2s ease;
+}
+
 .form-group input:focus {
     outline: none;
     border-color: #3498db;
+}
+
+.form-group select:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+.form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e1e5eb;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.2s ease;
+}
+
+.form-group textarea:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+.field-help {
+    display: block;
+    margin-top: 8px;
+    color: #6b7280;
+    font-size: 0.85rem;
 }
 
 /* Quill Editor Styles */
@@ -459,6 +602,67 @@ header h1 {
     font-style: normal;
 }
 
+.ai-helper {
+    border: 1px solid #d8e9f6;
+    background: #f8fcff;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.ai-helper-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+.ai-helper-header h3 {
+    font-size: 1.1rem;
+    color: #1f3a57;
+}
+
+.ai-helper-subtitle {
+    color: #4b5563;
+    margin-bottom: 14px;
+    font-size: 0.92rem;
+}
+
+.ai-helper-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.ai-status {
+    font-size: 0.9rem;
+    color: #1d4ed8;
+    min-height: 22px;
+    margin-bottom: 8px;
+}
+
+.ai-status-error {
+    color: #b91c1c;
+}
+
+.ai-response {
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    word-wrap: break-word;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.ai-response.note-content {
+    margin-bottom: 0;
+}
+
 .form-actions {
     display: flex;
     gap: 10px;
@@ -500,5 +704,10 @@ header h1 {
 
     .form-actions .btn {
         width: 100%;
+    }
+
+    .ai-helper-header {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }

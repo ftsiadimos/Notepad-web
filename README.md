@@ -12,6 +12,10 @@ A modern, feature-rich web-based note-taking application built with Flask and SQ
   - Export individual notes as PDF
   - Export all notes as a single PDF with proper formatting
   - Automatically strips HTML tags from rich text
+- **AI Writing Assistant**:
+  - Configure your Ollama API URL in Settings
+  - Ask AI to summarize, rewrite, or expand note content
+  - Insert generated suggestions directly into your note editor
 - **Responsive Design**: Beautiful UI that works seamlessly on desktop, tablet, and mobile
 - **Fast & Lightweight**: Built with Flask and SQLite for optimal performance
 - **Error Handling**: Comprehensive error handling with user-friendly error pages
@@ -71,6 +75,8 @@ cp .env.example .env
 |----------|-------------|---------|
 | `SECRET_KEY` | Flask session secret key | `dev-secret-key-change-in-production` |
 | `DATABASE_URL` | Database URI | `sqlite:///notepad.db` |
+| `OLLAMA_API_URL` | Default Ollama API base URL | `http://localhost:11434` |
+| `OLLAMA_MODEL` | Default Ollama model name | `llama3.2` |
 | `FLASK_DEBUG` | Enable debug mode | `True` |
 | `PORT` | Server port | `5000` |
 
@@ -94,8 +100,15 @@ cp .env.example .env
 ### Editing a Note
 1. Click **✏️ Edit** on any note card
 2. Modify the title or content
-3. Click **💾 Save Note**
-4. Use **Strip All Formatting** button to remove HTML tags
+3. Use **AI Note Assistant** below the editor for writing help
+4. Click **💾 Save Note**
+5. Use **Strip All Formatting** button to remove HTML tags
+
+### AI Assistant Setup
+1. Open **⚙ Settings** from the main page
+2. Set your Ollama API URL (for local Ollama this is usually `http://localhost:11434`)
+3. Optionally set a model name available in your Ollama instance
+4. Open a note and use **AI Note Assistant** under the content editor
 
 ### Searching Notes
 1. Type in the **Search notes...** box in the header
@@ -221,11 +234,14 @@ class Note(db.Model):
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/` | List all notes |
+| GET | `/settings` | Show settings form |
+| POST | `/settings` | Save app settings |
 | GET | `/note/new` | Show create note form |
 | POST | `/note/new` | Create new note |
 | GET | `/note/<id>` | Show edit note form |
 | POST | `/note/<id>` | Update note |
 | POST | `/note/<id>/delete` | Delete note |
+| POST | `/ai/chat` | Generate note-writing help from Ollama |
 | GET | `/export/pdf` | Export all notes as PDF |
 | GET | `/export/pdf/<id>` | Export single note as PDF |
 
