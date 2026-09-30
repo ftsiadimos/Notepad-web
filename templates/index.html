@@ -17,7 +17,7 @@
                     <input type="text" id="searchInput" placeholder="Search notes...">
                     <span class="search-icon">🔍</span>
                 </div>
-                <a href="{{ url_for('main.settings') }}" class="btn btn-secondary">⚙ Settings</a>
+                
                 <a href="{{ url_for('main.export_pdf') }}" class="btn btn-export">📄 Export All as PDF</a>
                 <a href="{{ url_for('main.note_new') }}" class="btn btn-primary">+ New Note</a>
                 <label class="view-toggle" title="Toggle list/tile view">
@@ -25,6 +25,9 @@
                     <span class="toggle-slider"></span>
                     <span class="toggle-label">☰</span>
                 </label>
+                <div class="header-spacer"></div>
+                <a href="{{ url_for('main.settings') }}" class="btn btn-secondary">⚙ Settings</a>
+                <a href="{{ url_for('main.about') }}" class="btn btn-secondary">ℹ️ About</a>
             </div>
         </header>
 

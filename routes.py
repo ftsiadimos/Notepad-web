@@ -482,6 +482,17 @@ def index():
         return render_template('index.html', notes=[])
 
 
+@main_bp.route('/about')
+def about():
+    try:
+        version_path = os.path.join(os.path.dirname(__file__), 'VERSION')
+        with open(version_path, 'r') as f:
+            version = f.read().strip()
+    except Exception:
+        version = 'dev'
+    return render_template('about.html', version=version)
+
+
 @main_bp.route('/settings', methods=['GET', 'POST'])
 def settings():
     model_fetch_error = None
