@@ -25,6 +25,11 @@
                     <span class="toggle-slider"></span>
                     <span class="toggle-label">☰</span>
                 </label>
+                <label class="theme-toggle" id="themeToggle" title="Toggle dark/light theme">
+                    <input type="checkbox" id="themeToggleInput">
+                    <span class="theme-slider"></span>
+                    <span class="theme-label">🌙</span>
+                </label>
                 <div class="header-spacer"></div>
                 <a href="{{ url_for('main.settings') }}" class="btn btn-secondary">⚙ Settings</a>
                 <a href="{{ url_for('main.about') }}" class="btn btn-secondary">ℹ️ About</a>
@@ -87,6 +92,27 @@
             toggle.checked = true;
             grid.classList.add('list-view');
         }
+
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const themeToggleInput = document.getElementById('themeToggleInput');
+        const themeLabel = themeToggle.querySelector('.theme-label');
+        const savedTheme = localStorage.getItem('notepadTheme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-theme');
+            themeToggleInput.checked = true;
+            themeLabel.textContent = '☀️';
+        }
+
+        themeToggle.addEventListener('click', function(e) {
+            // Prevent double-fire from label click
+            e.preventDefault();
+            document.body.classList.toggle('dark-theme');
+            const isDark = document.body.classList.contains('dark-theme');
+            themeToggleInput.checked = isDark;
+            themeLabel.textContent = isDark ? '☀️' : '🌙';
+            localStorage.setItem('notepadTheme', isDark ? 'dark' : 'light');
+        });
 
         toggle.addEventListener('change', function() {
             if (this.checked) {

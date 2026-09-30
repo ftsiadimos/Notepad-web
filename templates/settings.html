@@ -28,6 +28,15 @@
 
         <form method="post" class="note-form">
             <div class="form-group">
+                <label for="theme">Theme</label>
+                <select id="theme" name="theme">
+                    <option value="light" {% if current_theme == 'light' %}selected{% endif %}>☀️ Light</option>
+                    <option value="dark" {% if current_theme == 'dark' %}selected{% endif %}>🌙 Dark</option>
+                </select>
+                <small class="field-help">Choose your preferred color theme. This can also be toggled quickly from the header.</small>
+            </div>
+
+            <div class="form-group">
                 <label for="ollama_url">Ollama API URL</label>
                 <input
                     type="url"
@@ -61,6 +70,26 @@
     </div>
 
     <script>
+        // Apply saved theme on page load
+        (function() {
+            const savedTheme = localStorage.getItem('notepadTheme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+            }
+        })();
+
+        // Apply theme immediately when dropdown changes
+        const themeSelect = document.getElementById('theme');
+        if (themeSelect) {
+            themeSelect.addEventListener('change', function() {
+                const isDark = this.value === 'dark';
+                document.body.classList.toggle('dark-theme', isDark);
+                localStorage.setItem('notepadTheme', isDark ? 'dark' : 'light');
+            });
+        }
+
+        // Flash notifications: auto-hide and manual close
+
         // Flash notifications: auto-hide and manual close
         document.querySelectorAll('.flash').forEach((flashEl) => {
             const closeBtn = flashEl.querySelector('.flash-close');

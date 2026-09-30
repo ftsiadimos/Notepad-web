@@ -50,5 +50,15 @@
             </section>
         </div>
     </div>
+
+    <script>
+        // Apply saved theme on page load
+        (function() {
+            const savedTheme = localStorage.getItem('notepadTheme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+            }
+        })();
+    </script>
 </body>
 </html>

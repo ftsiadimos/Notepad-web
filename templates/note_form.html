@@ -87,6 +87,14 @@
     <!-- Quill Rich Text Editor -->
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
     <script>
+        // Apply saved theme on page load
+        (function() {
+            const savedTheme = localStorage.getItem('notepadTheme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+            }
+        })();
+
         // Store the content in a global variable
         let noteContent = '';
         const contentScript = document.getElementById('editor-initial-content');
