@@ -1,280 +1,226 @@
 # Notepad Web
 
-A modern, feature-rich web-based note-taking application built with Flask and SQLAlchemy. Create, edit, search, and export your notes with ease.
+Notepad Web is a lightweight Flask application for writing, organizing, and exporting notes in a clean browser-based interface. It stores notes in SQLite, supports rich text editing, exports notes to PDF, and can optionally use Ollama to rewrite or improve note content.
 
-## ✨ Features
+## Features
 
-- **Rich Text Editing**: Full-featured WYSIWYG editor with formatting options (bold, italic, lists, headings, etc.)
-- **Format Stripping**: One-click button to remove all HTML formatting and get clean plain text
-- **Search & Filter**: Real-time search across all your notes by title and content
-- **Multiple Views**: Toggle between grid and list view layouts (preference saved locally)
-- **PDF Export**: 
-  - Export individual notes as PDF
-  - Export all notes as a single PDF with proper formatting
-  - Automatically strips HTML tags from rich text
-- **AI Writing Assistant**:
-  - Configure your Ollama API URL in Settings
-  - Ask AI to summarize, rewrite, or expand note content
-  - Insert generated suggestions directly into your note editor
-- **Responsive Design**: Beautiful UI that works seamlessly on desktop, tablet, and mobile
-- **Fast & Lightweight**: Built with Flask and SQLite for optimal performance
-- **Error Handling**: Comprehensive error handling with user-friendly error pages
-- **Data Validation**: Input validation and sanitization for security
+- Rich-text editing with a WYSIWYG-style editor
+- Create, update, and delete notes
+- Search notes by title and content
+- PDF export for a single note or the full notebook
+- Persistent storage with SQLite
+- Theme and app settings managed in the UI
+- Optional AI writing assistance via Ollama
+- Responsive layout for desktop and smaller screens
+- Docker support for easy local deployment
 
-## 🛠️ Technical Stack
+## Tech stack
 
-- **Backend**: Flask 3.1+
-- **Database**: SQLAlchemy 3.1+ with SQLite
-- **Rich Text Editor**: Quill 2.0.3
-- **PDF Generation**: ReportLab 4.4+
-- **Frontend**: HTML5, CSS3, Vanilla JavaScript
+- Flask
+- Flask-SQLAlchemy
+- Flask-Migrate
+- SQLite
+- ReportLab for PDF generation
+- HTML, CSS, and vanilla JavaScript for the frontend
 
-## 📋 Requirements
+## Requirements
 
-- Python 3.8 or higher
-- pip (Python package manager)
+- Python 3.10+
+- pip
+- Optional: an Ollama instance running locally for AI features
 
-## 🚀 Quick Start
+## Quick start
 
-### 1. Clone the Repository
+### 1. Clone the repository
+
 ```bash
 git clone <repository-url>
 cd notepad-web
 ```
 
-### 2. Create Virtual Environment
+### 2. Create a virtual environment
+
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-# On Windows: .venv\Scripts\activate
 ```
 
-### 3. Install Dependencies
+On Windows:
+
+```powershell
+.venv\Scripts\activate
+```
+
+### 3. Install dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Run the Application
+### 4. Start the app
+
 ```bash
 python run.py
 ```
 
-Visit `http://127.0.0.1:5000` in your browser.
+The application runs by default on:
 
-## ⚙️ Configuration
+```text
+http://localhost:5223
+```
 
-Create a `.env` file based on `.env.example`:
+## Configuration
+
+The app reads a few runtime settings from environment variables, and some app preferences are stored in the SQLite database through the Settings page.
+
+### Environment variables
 
 ```bash
-cp .env.example .env
-```
-
-**Available configuration options:**
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `SECRET_KEY` | Flask session secret key | `dev-secret-key-change-in-production` |
-| `DATABASE_URL` | Database URI | `sqlite:///notepad.db` |
-| `OLLAMA_API_URL` | Default Ollama API base URL | `http://localhost:11434` |
-| `OLLAMA_MODEL` | Default Ollama model name | `llama3.2` |
-| `FLASK_DEBUG` | Enable debug mode | `True` |
-| `PORT` | Server port | `5000` |
-
-⚠️ **Important**: Change `SECRET_KEY` in production!
-
-## 📖 Usage Guide
-
-### Creating a Note
-1. Click **+ New Note** in the header
-2. Enter a title in the title field
-3. Write your content in the rich text editor
-4. Use the toolbar for formatting:
-   - Headers (H1-H6)
-   - Text styling (Bold, Italic, Underline, Strike)
-   - Colors and backgrounds
-   - Lists (ordered/unordered)
-   - Blockquotes and code blocks
-   - Links and images
-5. Click **💾 Save Note**
-
-### Editing a Note
-1. Click **✏️ Edit** on any note card
-2. Modify the title or content
-3. Use **AI Note Assistant** below the editor for writing help
-4. Click **💾 Save Note**
-5. Use **Strip All Formatting** button to remove HTML tags
-
-### AI Assistant Setup
-1. Open **⚙ Settings** from the main page
-2. Set your Ollama API URL (for local Ollama this is usually `http://localhost:11434`)
-3. Optionally set a model name available in your Ollama instance
-4. Open a note and use **AI Note Assistant** under the content editor
-
-### Searching Notes
-1. Type in the **Search notes...** box in the header
-2. Results filter in real-time by title and content
-3. Clear the search to see all notes again
-
-### Exporting to PDF
-- **Single Note**: Click **📄 PDF** button on a note card
-- **All Notes**: Click **📄 Export All as PDF** to download all notes in one file
-
-### Switching Views
-- Click the **☰** toggle button to switch between:
-  - **Grid View**: Card layout (default)
-  - **List View**: Compact list layout
-- Your preference is saved automatically
-
-### Removing Formatting
-1. Open a note for editing
-2. Select the text you want to strip formatting from
-3. Click the **Strip All Formatting** button in the toolbar
-4. All HTML tags will be removed, leaving plain text
-
-## 📁 Project Structure
-
-```
-notepad-web/
-├── app.py                 # Flask app factory & configuration
-├── models.py              # Database models (Note)
-├── routes.py              # Route handlers & business logic
-├── run.py                 # Application entry point
-├── requirements.txt       # Python dependencies
-├── .env.example           # Environment variables template
-├── README.md              # This file
-├── instance/
-│   └── notepad.db         # SQLite database (auto-created)
-├── static/
-│   └── style.css          # Application stylesheet
-└── templates/
-    ├── index.html         # Main notes list page
-    ├── note_form.html     # Note creation/editing page
-    ├── 404.html           # 404 error page
-    └── 500.html           # 500 error page
-```
-
-## 🔧 Advanced Usage
-
-### Database Migrations
-```bash
-flask db init
-flask db migrate -m "Description of changes"
-flask db upgrade
-```
-
-### Running in Production
-```bash
+export FLASK_RUN_HOST=0.0.0.0
+export FLASK_RUN_PORT=5223
 export FLASK_DEBUG=False
-export SECRET_KEY="your-production-secret-key"
-gunicorn -w 4 -b 0.0.0.0:5000 "app:create_app()"
+export SECRET_KEY=change-me-in-production
+export DATABASE_URL=sqlite:///notepad.db
 ```
 
-### Resetting the Database
+You can also put these in a `.env` file if your workflow loads it automatically.
+
+### Ollama settings
+
+The app includes a Settings screen where you can configure:
+
+- Ollama API URL
+- Ollama model name
+- Theme preference
+
+If you are running Ollama locally, the default URL is usually:
+
+```text
+http://localhost:11434
+```
+
+## Usage
+
+### Create a note
+
+- Open the app in your browser
+- Click the new note action in the interface
+- Enter a title and note content
+- Save the note
+
+### Edit and delete notes
+
+- Open an existing note from the list
+- Update the title or content
+- Save changes, or delete the note from the interface
+
+### Search notes
+
+- Use the search box from the main page to filter notes by title or content
+
+### Export to PDF
+
+- Export a single note from its card or edit view
+- Export all notes from the main page
+
+### Use the AI assistant
+
+- Open the Settings page
+- Point the app to your Ollama API
+- Pick a model
+- Open a note and use the AI helper to rewrite, expand, summarize, or improve the content
+
+## Docker
+
+This project includes a Docker setup for running the app in a container.
+
+### Build and run
+
 ```bash
-rm instance/notepad.db
+docker compose up --build
+```
+
+Then open:
+
+```text
+http://localhost:5223
+```
+
+To stop it:
+
+```bash
+docker compose down
+```
+
+## Project structure
+
+```text
+notepad-web/
+├── app.py
+├── models.py
+├── routes.py
+├── run.py
+├── requirements.txt
+├── Dockerfile
+├── docker-compose.yml
+├── .env.example
+├── README.md
+├── VERSION
+├── instance/
+│   └── notepad.db
+├── static/
+│   └── style.css
+├── templates/
+│   ├── 404.html
+│   ├── 500.html
+│   ├── about.html
+│   ├── index.html
+│   ├── note_form.html
+│   └── settings.html
+└── .gitignore
+```
+
+## Troubleshooting
+
+### Port already in use
+
+Check whether another service is using port 5223:
+
+```bash
+lsof -i :5223
+```
+
+If needed, stop the conflicting process or change the port with `FLASK_RUN_PORT`.
+
+### Ollama connection errors
+
+Confirm the Ollama API is reachable:
+
+```bash
+curl http://localhost:11434/api/tags
+```
+
+If this fails, make sure Ollama is running before using the AI assistant.
+
+### Database issues
+
+The database is created automatically in `instance/notepad.db` when the app starts. If you need a clean reset:
+
+```bash
+rm -f instance/notepad.db
 python run.py
 ```
 
-## 🐛 Troubleshooting
+## Development notes
 
-### "Port 5000 already in use"
-**Linux/Mac:**
-```bash
-lsof -i :5000
-kill -9 <PID>
-```
+This project is intentionally simple and easy to extend:
 
-**Windows:**
-```cmd
-netstat -ano | findstr :5000
-taskkill /PID <PID> /F
-```
+- Note logic lives in `models.py`
+- Routes and request handling live in `routes.py`
+- App configuration is created in `app.py`
+- The entry point is `run.py`
 
-### "ModuleNotFoundError: No module named 'X'"
-```bash
-pip install -r requirements.txt
-```
+## License
 
-### "Database is corrupted"
-```bash
-rm instance/notepad.db
-python run.py  # Database will be recreated
-```
+This project is provided as-is for personal and educational use. If you want to add a license, it is recommended to use one appropriate for your deployment and distribution requirements.
 
-## 📝 Recent Improvements (v1.1)
-
-- ✅ Enhanced error handling with try-catch blocks in all routes
-- ✅ HTML stripping for PDF exports (properly handles rich text)
-- ✅ Input validation (title length limits, content validation)
-- ✅ Improved configuration with environment variables
-- ✅ Content preview truncation for notes list
-- ✅ Better database initialization and recovery
-- ✅ Custom 404 and 500 error pages
-- ✅ Enhanced security (content length limits, secure SECRET_KEY handling)
-- ✅ Better logging and debugging information
-
-## 📖 API Reference
-
-### Note Model
-```python
-class Note(db.Model):
-    id: int
-    title: str (max 200 chars)
-    content: str (rich HTML text)
-    created_at: datetime
-    updated_at: datetime
-    
-    # Methods
-    to_dict() -> dict
-    get_preview(length=150) -> str
-```
-
-### Routes
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | List all notes |
-| GET | `/settings` | Show settings form |
-| POST | `/settings` | Save app settings |
-| GET | `/note/new` | Show create note form |
-| POST | `/note/new` | Create new note |
-| GET | `/note/<id>` | Show edit note form |
-| POST | `/note/<id>` | Update note |
-| POST | `/note/<id>/delete` | Delete note |
-| POST | `/ai/chat` | Generate note-writing help from Ollama |
-| GET | `/export/pdf` | Export all notes as PDF |
-| GET | `/export/pdf/<id>` | Export single note as PDF |
-
-## 🤝 Contributing
-
-Contributions are welcome! Here's how to contribute:
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is open source and available under the MIT License. See LICENSE file for details.
-
-## 🙋 Support
-
-For issues, questions, or suggestions:
-- Open an issue on GitHub
-- Check existing issues for solutions
-- Review the troubleshooting section above
-
-## 🎯 Future Enhancements
-
-Potential features for future versions:
-- User authentication and multi-user support
-- Cloud synchronization
-- Tags and categories
-- Note sharing
-- Dark mode
-- Rich text preview
-- Note versioning/history
-- Markdown support
-- Mobile app
