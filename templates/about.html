@@ -9,44 +9,98 @@
 <body>
     <div class="container">
         <header>
-            <h1>ℹ️ About</h1>
+            <h1>ℹ️ About Notepad Web</h1>
             <a href="{{ url_for('main.index') }}" class="btn btn-secondary">← Back to Notes</a>
         </header>
 
         <div class="about-content">
-            <section class="about-section">
+            <!-- Hero Section -->
+            <section class="about-hero">
+                <div class="hero-icon">📝</div>
                 <h2>Notepad Web</h2>
                 <p class="version">Version {{ version }}</p>
-                <p>A modern, feature-rich web-based note-taking application built with Flask and SQLAlchemy.</p>
+                <p class="hero-description">A modern, feature-rich web-based note-taking application built with Flask and SQLAlchemy. Designed for simplicity, speed, and elegance.</p>
             </section>
 
+            <!-- Features Section -->
             <section class="about-section">
-                <h2>Features</h2>
-                <ul>
-                    <li>Rich text editing with Quill 2.0.3</li>
-                    <li>Real-time search across all notes</li>
-                    <li>Grid and list view layouts</li>
-                    <li>PDF export (individual and bulk)</li>
-                    <li>AI writing assistant via Ollama</li>
-                    <li>Responsive design for desktop, tablet, and mobile</li>
-                    <li>SQLite database for fast, lightweight storage</li>
-                </ul>
+                <h2>✨ Features</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <span class="feature-icon">📝</span>
+                        <h3>Rich Text Editing</h3>
+                        <p>Powerful editor powered by Quill 2.0.3 with formatting tools</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">🔍</span>
+                        <h3>Instant Search</h3>
+                        <p>Real-time search across all your notes</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">📊</span>
+                        <h3>Dual View</h3>
+                        <p>Switch between grid and list layouts</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">📄</span>
+                        <h3>PDF Export</h3>
+                        <p>Export individual notes or bulk export all notes</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">🤖</span>
+                        <h3>AI Assistant</h3>
+                        <p>Built-in AI writing help via Ollama</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">📱</span>
+                        <h3>Responsive</h3>
+                        <p>Works beautifully on desktop, tablet, and mobile</p>
+                    </div>
+                </div>
             </section>
 
+            <!-- Technical Stack Section -->
             <section class="about-section">
-                <h2>Technical Stack</h2>
-                <ul>
-                    <li><strong>Backend:</strong> Flask 3.1+</li>
-                    <li><strong>Database:</strong> SQLAlchemy 3.1+ with SQLite</li>
-                    <li><strong>Rich Text Editor:</strong> Quill 2.0.3</li>
-                    <li><strong>PDF Generation:</strong> ReportLab 4.4+</li>
-                    <li><strong>Frontend:</strong> HTML5, CSS3, Vanilla JavaScript</li>
-                </ul>
+                <h2>🛠️ Technical Stack</h2>
+                <div class="tech-stack">
+                    <div class="tech-item">
+                        <span class="tech-label">Backend</span>
+                        <span class="tech-value">Flask 3.1+</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-label">Database</span>
+                        <span class="tech-value">SQLAlchemy 3.1+ (SQLite)</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-label">Editor</span>
+                        <span class="tech-value">Quill 2.0.3</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-label">PDF</span>
+                        <span class="tech-value">ReportLab 4.4+</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-label">Frontend</span>
+                        <span class="tech-value">HTML5, CSS3, Vanilla JS</span>
+                    </div>
+                </div>
             </section>
 
-            <section class="about-section">
-                <h2>License</h2>
-                <p>Notepad Web is open-source software.</p>
+            <!-- License & Community Section -->
+            <section class="about-section about-cta">
+                <h2>📜 License & Community</h2>
+                <p>Notepad Web is open-source software, freely available for personal and commercial use.</p>
+                <div class="cta-buttons">
+                    <a href="https://github.com/ftsiadimos/Notepad-web" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                        ⭐ Star on GitHub
+                    </a>
+                    <a href="https://github.com/ftsiadimos/Notepad-web/issues" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+                        🐛 Report an Issue
+                    </a>
+                    <a href="https://github.com/ftsiadimos/Notepad-web/pulls" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+                        🔧 Contribute
+                    </a>
+                </div>
             </section>
         </div>
     </div>
