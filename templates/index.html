@@ -13,26 +13,32 @@
         <header>
             <h1>📝 Notepad Web</h1>
             <div class="header-actions">
-                <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="Search notes...">
-                    <span class="search-icon">🔍</span>
-                </div>
-                
-                <a href="{{ url_for('main.export_pdf') }}" class="btn btn-export">📄 Export All as PDF</a>
                 <a href="{{ url_for('main.note_new') }}" class="btn btn-primary">+ New Note</a>
-                <label class="view-toggle" title="Toggle list/tile view">
-                    <input type="checkbox" id="viewToggle">
-                    <span class="toggle-slider"></span>
-                    <span class="toggle-label">☰</span>
-                </label>
-                <label class="theme-toggle" id="themeToggle" title="Toggle dark/light theme">
-                    <input type="checkbox" id="themeToggleInput">
-                    <span class="theme-slider"></span>
-                    <span class="theme-label">🌙</span>
-                </label>
-                <div class="header-spacer"></div>
-                <a href="{{ url_for('main.settings') }}" class="btn btn-secondary">⚙ Settings</a>
-                <a href="{{ url_for('main.about') }}" class="btn btn-secondary">ℹ️ About</a>
+                <div class="btn-group">
+                    <button type="button" id="selectAllBtn" class="btn btn-ghost btn-small">☑ Select All</button>
+                    <button type="button" id="deselectAllBtn" class="btn btn-ghost btn-small">☐ Deselect All</button>
+                    <button type="button" id="exportSelectedBtn" class="btn btn-export btn-small">📄 Export PDF</button>
+                </div>
+                <div class="btn-group">
+                    <label class="view-toggle" title="Toggle list/tile view">
+                        <input type="checkbox" id="viewToggle">
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label">☰</span>
+                    </label>
+                    <label class="theme-toggle" id="themeToggle" title="Toggle dark/light theme">
+                        <input type="checkbox" id="themeToggleInput">
+                        <span class="theme-slider"></span>
+                        <span class="theme-label">🌙</span>
+                    </label>
+                </div>
+                <div class="btn-group">
+                    <a href="{{ url_for('main.settings') }}" class="btn btn-ghost">⚙ Settings</a>
+                    <a href="{{ url_for('main.about') }}" class="btn btn-ghost">ℹ️ About</a>
+                </div>
+            </div>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search notes...">
+                <span class="search-icon">🔍</span>
             </div>
         </header>
 
@@ -53,16 +59,21 @@
             <div class="notes-grid" id="notesGrid">
                 {% for note in notes %}
                 <div class="note-card">
+                    <div class="note-checkbox">
+                        <input type="checkbox" class="note-select" data-note-id="{{ note.id }}" title="Select note">
+                    </div>
                     <div class="note-header">
-                        <h3 class="note-title">
-                            <a href="{{ url_for('main.note_edit', note_id=note.id) }}" class="note-title-link">{{ note.title }}</a>
-                        </h3>
-                        <div class="note-actions">
-                            <a href="{{ url_for('main.note_edit', note_id=note.id) }}" class="btn btn-small">✏️ Edit</a>
-                            <a href="{{ url_for('main.export_single_pdf', note_id=note.id) }}" class="btn btn-small btn-export" title="Export as PDF">📄 PDF</a>
-                            <form method="post" action="{{ url_for('main.note_delete', note_id=note.id) }}" class="inline-form" onsubmit="return confirm('Delete this note?')">
-                                <button type="submit" class="btn btn-small btn-delete">🗑️</button>
-                            </form>
+                        <div class="note-title-area">
+                            <h3 class="note-title">
+                                <a href="{{ url_for('main.note_edit', note_id=note.id) }}" class="note-title-link">{{ note.title }}</a>
+                            </h3>
+                            <div class="note-actions">
+                                <a href="{{ url_for('main.note_edit', note_id=note.id) }}" class="btn btn-small">✏️ Edit</a>
+                                <a href="{{ url_for('main.export_single_pdf', note_id=note.id) }}" class="btn btn-small btn-export" title="Export as PDF">📄 PDF</a>
+                                <form method="post" action="{{ url_for('main.note_delete', note_id=note.id) }}" class="inline-form" onsubmit="return confirm('Delete this note?')">
+                                    <button type="submit" class="btn btn-small btn-delete">🗑️</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                     <div class="note-content">{{ note.get_preview() }}</div>
@@ -172,6 +183,91 @@
                 }
             }, 4500);
         });
+
+        // Note selection and export
+        const selectAllBtn = document.getElementById('selectAllBtn');
+        const deselectAllBtn = document.getElementById('deselectAllBtn');
+        const exportSelectedBtn = document.getElementById('exportSelectedBtn');
+        const noteCards = document.querySelectorAll('.note-card');
+        const checkboxes = document.querySelectorAll('.note-select');
+
+        function updateExportButton() {
+            const checked = document.querySelectorAll('.note-select:checked');
+            if (checked.length === 0) {
+                exportSelectedBtn.style.opacity = '0.5';
+                exportSelectedBtn.style.pointerEvents = 'none';
+            } else {
+                exportSelectedBtn.style.opacity = '1';
+                exportSelectedBtn.style.pointerEvents = 'auto';
+            }
+        }
+
+        if (selectAllBtn) {
+            selectAllBtn.addEventListener('click', function() {
+                checkboxes.forEach(cb => {
+                    const card = cb.closest('.note-card');
+                    if (card && card.style.display !== 'none') {
+                        cb.checked = true;
+                    }
+                });
+                updateExportButton();
+            });
+        }
+
+        if (deselectAllBtn) {
+            deselectAllBtn.addEventListener('click', function() {
+                checkboxes.forEach(cb => cb.checked = false);
+                updateExportButton();
+            });
+        }
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', updateExportButton);
+        });
+
+        if (exportSelectedBtn) {
+            exportSelectedBtn.addEventListener('click', function() {
+                const selected = document.querySelectorAll('.note-select:checked');
+                if (selected.length === 0) {
+                    alert('Please select at least one note to export.');
+                    return;
+                }
+                const noteIds = Array.from(selected).map(cb => cb.dataset.noteId);
+                
+                exportSelectedBtn.textContent = '⏳ Exporting...';
+                exportSelectedBtn.disabled = true;
+                
+                fetch('/export/pdf/selected', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ note_ids: noteIds })
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Export failed');
+                    return response.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'notepad-notes-selected.pdf';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                })
+                .catch(err => {
+                    alert('Error exporting notes: ' + err.message);
+                })
+                .finally(() => {
+                    exportSelectedBtn.textContent = '📄 Export Selected as PDF';
+                    exportSelectedBtn.disabled = false;
+                });
+            });
+        }
+
+        // Initialize export button state
+        updateExportButton();
     </script>
 </body>
 </html>

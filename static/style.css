@@ -173,25 +173,74 @@ body {
 /* Header */
 header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 0;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px 16px 16px 16px;
+    background: var(--bg-tertiary);
+    border-radius: 12px;
     border-bottom: 2px solid var(--header-border);
-    margin-bottom: 30px;
-    flex-wrap: wrap;
-    gap: 15px;
+    margin-bottom: 16px;
+    gap: 10px;
 }
 
 header h1 {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     color: var(--text-heading);
+    margin: 0;
 }
 
 .header-actions {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     flex-wrap: wrap;
     align-items: center;
+    width: 100%;
+}
+
+.btn-group {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.btn-group .btn {
+    flex: none;
+    min-width: auto;
+}
+
+.export-controls {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    background: var(--bg-tertiary);
+    padding: 3px 6px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.export-controls .btn-small {
+    border: none;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 0.82rem;
+    padding: 4px 8px;
+    transition: background 0.15s ease;
+}
+
+.export-controls .btn-small:hover {
+    background: var(--bg-secondary);
+}
+
+.export-controls .btn-export {
+    background: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+.export-controls .btn-export:hover {
+    background: #219a52;
 }
 
 .header-spacer {
@@ -203,6 +252,8 @@ header h1 {
     position: relative;
     display: flex;
     align-items: center;
+    width: 100%;
+    max-width: 400px;
 }
 
 .search-box input {
@@ -210,8 +261,8 @@ header h1 {
     border: 2px solid var(--border-color);
     border-radius: 6px;
     font-size: 0.95rem;
-    width: 220px;
-    transition: border-color 0.2s ease, width 0.2s ease;
+    width: 100%;
+    transition: border-color 0.2s ease;
     background: var(--bg-secondary);
     color: var(--text-primary);
 }
@@ -231,43 +282,80 @@ header h1 {
 
 /* Buttons */
 .btn {
-    display: inline-block;
-    padding: 10px 20px;
-    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 14px;
+    min-height: 34px;
+    border-radius: 8px;
     text-decoration: none;
-    font-size: 0.95rem;
+    font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
-    border: none;
+    border: 1px solid transparent;
     transition: all 0.2s ease;
     text-align: center;
+    white-space: nowrap;
+    line-height: 1;
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.btn-ghost:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--border-focus);
+    color: var(--text-heading);
+}
+
+.btn-ghost.btn-small {
+    padding: 6px 10px;
+    font-size: 0.82rem;
+    min-height: 28px;
+    border-radius: 6px;
 }
 
 .btn-primary {
-    background: #3498db;
+    background: linear-gradient(135deg, #3498db, #2980b9);
     color: white;
+    border-color: #2471a3;
+    box-shadow: 0 1px 3px rgba(52, 152, 219, 0.3);
 }
 
 .btn-primary:hover {
-    background: #2980b9;
+    background: linear-gradient(135deg, #2980b9, #2471a3);
+    box-shadow: 0 2px 6px rgba(52, 152, 219, 0.4);
+    transform: translateY(-1px);
 }
 
 .btn-secondary {
-    background: #95a5a6;
+    background: linear-gradient(135deg, #95a5a6, #7f8c8d);
     color: white;
+    border-color: #6c7a7b;
+    box-shadow: 0 1px 3px rgba(149, 165, 166, 0.3);
 }
 
 .btn-secondary:hover {
-    background: #7f8c8d;
+    background: linear-gradient(135deg, #7f8c8d, #6c7a7b);
+    box-shadow: 0 2px 6px rgba(149, 165, 166, 0.4);
+    transform: translateY(-1px);
 }
 
 .btn-export {
-    background: #27ae60;
+    background: linear-gradient(135deg, #27ae60, #229954);
     color: white;
+    border-color: #1e8449;
+    box-shadow: 0 1px 3px rgba(39, 174, 96, 0.3);
 }
 
 .btn-export:hover {
-    background: #219a52;
+    background: linear-gradient(135deg, #229954, #1e8449);
+    box-shadow: 0 2px 6px rgba(39, 174, 96, 0.4);
+    transform: translateY(-1px);
 }
 
 .btn-delete {
@@ -302,6 +390,20 @@ header h1 {
     align-items: flex-start;
     padding: 12px 20px;
     gap: 15px;
+}
+
+.notes-grid.list-view .note-checkbox {
+    position: relative;
+    top: auto;
+    right: auto;
+    flex-shrink: 0;
+    padding-top: 3px;
+}
+
+.notes-grid.list-view .note-checkbox input[type="checkbox"] {
+    opacity: 1;
+    width: 18px;
+    height: 18px;
 }
 
 .notes-grid.list-view .note-header {
@@ -509,6 +611,42 @@ header h1 {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     display: flex;
     flex-direction: column;
+    position: relative;
+}
+
+.note-checkbox {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+}
+
+.note-checkbox input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--toggle-active);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    padding: 0;
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-tertiary);
+}
+
+.note-checkbox input[type="checkbox"]:hover {
+    opacity: 1;
+    border-color: var(--border-focus);
+}
+
+.note-card:hover .note-checkbox input[type="checkbox"] {
+    opacity: 1;
+}
+
+.note-checkbox input[type="checkbox"]:checked {
+    opacity: 1;
+    border-color: var(--toggle-active);
+    background: var(--toggle-active);
 }
 
 .note-card:hover {
@@ -524,11 +662,21 @@ header h1 {
     margin-bottom: 12px;
 }
 
+.note-title-area {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    flex: 1;
+    text-align: left;
+}
+
 .note-title {
     font-size: 1.2rem;
     color: var(--text-heading);
     line-height: 1.3;
     min-width: 0;
+    text-align: left;
 }
 
 .note-title-link {
@@ -604,6 +752,10 @@ header h1 {
     margin-bottom: 15px;
     flex-grow: 1;
     word-break: break-word;
+}
+
+.notes-grid:not(.list-view) .note-card {
+    padding-right: 40px;
 }
 
 .notes-grid:not(.list-view) .note-content {
