@@ -99,6 +99,33 @@ If you are running Ollama locally, the default URL is usually:
 http://localhost:11434
 ```
 
+## Docker
+
+### Pull the image
+
+```bash
+docker pull ghcr.io/ftsiadimos/notepad-web:latest
+```
+
+### Run the container
+
+```bash
+docker run -d \
+  --name notepad-web \
+  -p 5223:5223 \
+  -v notepad-data:/app/instance \
+  -e SECRET_KEY=change-me-in-production \
+  ghcr.io/ftsiadimos/notepad-web:latest
+```
+
+The application will be available at:
+
+```text
+http://localhost:5223
+```
+
+**Volume mount:** `-v notepad-data:/app/instance` persists your SQLite database and settings across container restarts. Replace with a bind mount (e.g., `-v ./instance:/app/instance`) if you prefer host-mounted files.
+
 ## Usage
 
 ### Create a note
