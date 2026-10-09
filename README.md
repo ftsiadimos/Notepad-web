@@ -29,6 +29,51 @@ Notepad Web is a lightweight Flask application for writing, organizing, and expo
 - pip
 - Optional: an Ollama instance running locally for AI features
 
+## Docker
+
+### Pull the image
+
+```bash
+docker pull ghcr.io/ftsiadimos/notepad-web:latest
+```
+
+### Run the container
+
+```bash
+docker run -d \
+  --name notepad-web \
+  -p 5223:5223 \
+  -v notepad-data:/app/instance \
+  -e SECRET_KEY=change-me-in-production \
+  ghcr.io/ftsiadimos/notepad-web:latest
+```
+
+The application will be available at:
+
+```text
+http://localhost:5223
+```
+
+**Volume mount:** `-v notepad-data:/app/instance` persists your SQLite database and settings across container restarts. Replace with a bind mount (e.g., `-v ./instance:/app/instance`) if you prefer host-mounted files.
+
+### Build and run from source
+
+```bash
+docker compose up --build
+```
+
+Then open:
+
+```text
+http://localhost:5223
+```
+
+To stop it:
+
+```bash
+docker compose down
+```
+
 ## Quick start
 
 ### 1. Clone the repository
@@ -99,33 +144,6 @@ If you are running Ollama locally, the default URL is usually:
 http://localhost:11434
 ```
 
-## Docker
-
-### Pull the image
-
-```bash
-docker pull ghcr.io/ftsiadimos/notepad-web:latest
-```
-
-### Run the container
-
-```bash
-docker run -d \
-  --name notepad-web \
-  -p 5223:5223 \
-  -v notepad-data:/app/instance \
-  -e SECRET_KEY=change-me-in-production \
-  ghcr.io/ftsiadimos/notepad-web:latest
-```
-
-The application will be available at:
-
-```text
-http://localhost:5223
-```
-
-**Volume mount:** `-v notepad-data:/app/instance` persists your SQLite database and settings across container restarts. Replace with a bind mount (e.g., `-v ./instance:/app/instance`) if you prefer host-mounted files.
-
 ## Usage
 
 ### Create a note
@@ -157,44 +175,26 @@ http://localhost:5223
 - Pick a model
 - Open a note and use the AI helper to rewrite, expand, summarize, or improve the content
 
-## Docker
-
-This project includes a Docker setup for running the app in a container.
-
-### Build and run
-
-```bash
-docker compose up --build
-```
-
-Then open:
-
-```text
-http://localhost:5223
-```
-
-To stop it:
-
-```bash
-docker compose down
-```
-
 ## Project structure
 
 ```text
 notepad-web/
 ├── app.py
 ├── models.py
-├── routes.py
 ├── run.py
 ├── requirements.txt
 ├── Dockerfile
 ├── docker-compose.yml
-├── .env.example
 ├── README.md
 ├── VERSION
 ├── instance/
-│   └── notepad.db
+├── routes/
+│   ├── __init__.py
+│   ├── ai.py
+│   ├── api.py
+│   ├── exports.py
+│   ├── notes.py
+│   └── settings.py
 ├── static/
 │   └── style.css
 ├── templates/
@@ -204,7 +204,10 @@ notepad-web/
 │   ├── index.html
 │   ├── note_form.html
 │   └── settings.html
-└── .gitignore
+└── utils/
+    ├── __init__.py
+    ├── helpers.py
+    └── pdf.py
 ```
 
 ## Troubleshooting
@@ -243,7 +246,8 @@ python run.py
 This project is intentionally simple and easy to extend:
 
 - Note logic lives in `models.py`
-- Routes and request handling live in `routes.py`
+- Routes are organized in the `routes/` directory (`notes.py`, `ai.py`, `api.py`, `exports.py`, `settings.py`)
+- Utility functions live in `utils/` (`helpers.py`, `pdf.py`)
 - App configuration is created in `app.py`
 - The entry point is `run.py`
 
