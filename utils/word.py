@@ -163,11 +163,10 @@ def _add_paragraph_with_formatting(element, doc):
 
 
 def _add_list(element, doc, ordered=False):
-    """Add an ordered or unordered list."""
-    list_style = 'List Number' if ordered else 'List Bullet'
+    """Add an ordered or unordered list (always using bullets/dots)."""
     for child in element.children:
         if isinstance(child, Tag) and child.name and child.name.lower() == 'li':
-            p = doc.add_paragraph(style=list_style)
+            p = doc.add_paragraph(style='List Bullet')
             _process_inline_elements(child, p, doc)
             # Handle nested lists within li
             for nested in child.children:
