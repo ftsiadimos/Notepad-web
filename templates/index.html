@@ -17,8 +17,8 @@
                 <div class="btn-group">
                     <button type="button" id="selectAllBtn" class="btn btn-ghost btn-small">☑ Select All</button>
                     <button type="button" id="deselectAllBtn" class="btn btn-ghost btn-small">☐ Deselect All</button>
-                    <button type="button" id="exportSelectedBtn" class="btn btn-export btn-small">📄 Export PDF</button>
-                    <a href="{{ url_for('main.export_docx') }}" class="btn btn-export btn-small" title="Export all notes as Word">📘 Word</a>
+                    <button type="button" id="exportSelectedPdfBtn" class="btn btn-export btn-small">📄 Export PDF</button>
+                    <button type="button" id="exportSelectedDocxBtn" class="btn btn-export btn-small">📘 Export Word</button>
                 </div>
                 <div class="btn-group">
                     <label class="view-toggle" title="Toggle list/tile view">
@@ -189,18 +189,25 @@
         // Note selection and export
         const selectAllBtn = document.getElementById('selectAllBtn');
         const deselectAllBtn = document.getElementById('deselectAllBtn');
-        const exportSelectedBtn = document.getElementById('exportSelectedBtn');
+        const exportSelectedPdfBtn = document.getElementById('exportSelectedPdfBtn');
+        const exportSelectedDocxBtn = document.getElementById('exportSelectedDocxBtn');
         const noteCards = document.querySelectorAll('.note-card');
         const checkboxes = document.querySelectorAll('.note-select');
 
         function updateExportButton() {
             const checked = document.querySelectorAll('.note-select:checked');
-            if (checked.length === 0) {
-                exportSelectedBtn.style.opacity = '0.5';
-                exportSelectedBtn.style.pointerEvents = 'none';
-            } else {
-                exportSelectedBtn.style.opacity = '1';
-                exportSelectedBtn.style.pointerEvents = 'auto';
+            const count = checked.length;
+            const hasSelection = count > 0;
+            
+            // Update PDF export button
+            if (exportSelectedPdfBtn) {
+                exportSelectedPdfBtn.style.opacity = hasSelection ? '1' : '0.5';
+                exportSelectedPdfBtn.style.pointerEvents = hasSelection ? 'auto' : 'none';
+            }
+            // Update Word export button
+            if (exportSelectedDocxBtn) {
+                exportSelectedDocxBtn.style.opacity = hasSelection ? '1' : '0.5';
+                exportSelectedDocxBtn.style.pointerEvents = hasSelection ? 'auto' : 'none';
             }
         }
 
@@ -227,8 +234,8 @@
             cb.addEventListener('change', updateExportButton);
         });
 
-        if (exportSelectedBtn) {
-            exportSelectedBtn.addEventListener('click', function() {
+        if (exportSelectedPdfBtn) {
+            exportSelectedPdfBtn.addEventListener('click', function() {
                 const selected = document.querySelectorAll('.note-select:checked');
                 if (selected.length === 0) {
                     alert('Please select at least one note to export.');
@@ -236,8 +243,8 @@
                 }
                 const noteIds = Array.from(selected).map(cb => cb.dataset.noteId);
                 
-                exportSelectedBtn.textContent = '⏳ Exporting...';
-                exportSelectedBtn.disabled = true;
+                exportSelectedPdfBtn.textContent = '⏳ Exporting...';
+                exportSelectedPdfBtn.disabled = true;
                 
                 fetch('/export/pdf/selected', {
                     method: 'POST',
@@ -262,8 +269,49 @@
                     alert('Error exporting notes: ' + err.message);
                 })
                 .finally(() => {
-                    exportSelectedBtn.textContent = '📄 Export Selected as PDF';
-                    exportSelectedBtn.disabled = false;
+                    exportSelectedPdfBtn.textContent = '📄 Export Selected as PDF';
+                    exportSelectedPdfBtn.disabled = false;
+                });
+            });
+        }
+
+        if (exportSelectedDocxBtn) {
+            exportSelectedDocxBtn.addEventListener('click', function() {
+                const selected = document.querySelectorAll('.note-select:checked');
+                if (selected.length === 0) {
+                    alert('Please select at least one note to export.');
+                    return;
+                }
+                const noteIds = Array.from(selected).map(cb => cb.dataset.noteId);
+                
+                exportSelectedDocxBtn.textContent = '⏳ Exporting...';
+                exportSelectedDocxBtn.disabled = true;
+                
+                fetch('/export/docx/selected', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ note_ids: noteIds })
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Export failed');
+                    return response.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'notepad-notes-selected.docx';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                })
+                .catch(err => {
+                    alert('Error exporting notes: ' + err.message);
+                })
+                .finally(() => {
+                    exportSelectedDocxBtn.textContent = '📘 Export Selected as Word';
+                    exportSelectedDocxBtn.disabled = false;
                 });
             });
         }
