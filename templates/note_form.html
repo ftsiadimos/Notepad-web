@@ -1,33 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% if note %}Edit Note{% else %}New Note{% endif %} - Notepad Web</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <!-- Quill Rich Text Editor -->
-    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
-</head>
-<body>
-    <div class="container">
+{% extends "base.html" %}
+
+{% block title %}{% if note %}Edit Note{% else %}New Note{% endif %} - Notepad Web{% endblock %}
+
+{% block header %}
         <header>
             <h1>{% if note %}✏️ Edit Note{% else %}📝 New Note{% endif %}</h1>
             <a href="{{ url_for('main.index') }}" class="btn btn-secondary">← Back to Notes</a>
         </header>
+{% endblock %}
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="flash-messages">
-                    {% for category, message in messages %}
-                        <div class="flash flash-{{ category }}" role="alert">
-                            <span class="flash-text">{{ message }}</span>
-                            <button type="button" class="flash-close" aria-label="Close notification">&times;</button>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
-
+{% block content %}
         <form method="post" class="note-form" id="noteForm">
             <div class="form-group">
                 <label for="title">Title</label>
@@ -38,8 +20,7 @@
 
             <div class="form-group">
                 <label for="content">Content</label>
-                <div id="editor">
-                </div>
+                <div id="editor"></div>
                 <div style="margin-top: 8px; display: flex; gap: 8px;">
                     <button type="button" id="cleanInlineFormatBtn" class="btn btn-small" style="background-color: #e8f4f8; color: #2980b9;">
                         🧹 Clean Inline Format (Bold, Italic, Colors)
@@ -82,8 +63,9 @@
         <script type="application/json" id="editor-initial-content">
             {{ note.content | tojson if note and note.content else '""' }}
         </script>
-    </div>
+{% endblock %}
 
+{% block scripts %}
     <!-- Quill Rich Text Editor -->
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
     <script>
@@ -138,16 +120,13 @@
         }, 100);
         if (noteContent && noteContent.length > 0) {
             try {
-                // Use Quill's clipboard API to convert HTML to Delta
                 const delta = quill.clipboard.convert({
                     html: noteContent
                 });
-                // Set the contents using Quill's API
                 quill.setContents(delta, 'silent');
                 console.log('✅ Content loaded successfully');
             } catch (e) {
                 console.error('Failed to load content:', e);
-                // Fallback: try direct innerHTML
                 try {
                     quill.root.innerHTML = noteContent;
                 } catch (e2) {
@@ -156,46 +135,29 @@
             }
         }
 
-        // Handle "Clean Inline Format" button - removes bold, italic, colors, etc. but keeps paragraphs, lists, etc.
+        // Handle "Clean Inline Format" button
         const cleanInlineBtn = document.getElementById('cleanInlineFormatBtn');
         if (cleanInlineBtn) {
             cleanInlineBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 const contents = quill.getContents();
-                
-                // Process each operation and remove inline formats only
                 contents.ops.forEach(op => {
                     if (op.attributes) {
-                        // Keep block-level formats, remove inline formats
                         const blockFormats = ['header', 'list', 'blockquote', 'code-block', 'align', 'indent'];
                         const inlineFormats = ['bold', 'italic', 'underline', 'strike', 'color', 'background', 'font', 'size', 'link', 'script'];
-                        
-                        // Remove all inline format attributes
-                        inlineFormats.forEach(format => {
-                            delete op.attributes[format];
-                        });
-                        
-                        // Keep only block formats
+                        inlineFormats.forEach(format => { delete op.attributes[format]; });
                         for (let key in op.attributes) {
-                            if (!blockFormats.includes(key)) {
-                                delete op.attributes[key];
-                            }
+                            if (!blockFormats.includes(key)) { delete op.attributes[key]; }
                         }
-                        
-                        // If no attributes left, delete the attributes object
-                        if (Object.keys(op.attributes).length === 0) {
-                            delete op.attributes;
-                        }
+                        if (Object.keys(op.attributes).length === 0) { delete op.attributes; }
                     }
                 });
-                
-                // Set the cleaned contents
                 quill.setContents(contents, 'silent');
-                console.log('✓ Inline formatting removed - kept paragraphs, lists, blockquotes, headers');
+                console.log('✓ Inline formatting removed');
             });
         }
 
-        // Handle "Remove All Format" button - removes ALL formatting, keeps only plain text
+        // Handle "Remove All Format" button
         const removeAllBtn = document.getElementById('removeAllFormatBtn');
         if (removeAllBtn) {
             removeAllBtn.addEventListener('click', function(e) {
@@ -203,7 +165,7 @@
                 const text = quill.getText().trim();
                 quill.setContents([]);
                 quill.insertText(0, text);
-                console.log('✓ All formatting removed - plain text only');
+                console.log('✓ All formatting removed');
             });
         }
 
@@ -211,13 +173,7 @@
         const noteForm = document.getElementById('noteForm');
         noteForm.addEventListener('submit', function(e) {
             const content = quill.root.innerHTML;
-            console.log('Form submitted! Quill content:', content.substring(0, 100));
-            console.log('Setting hidden input value...');
             document.getElementById('content-input').value = content;
-            console.log('Hidden input now contains:', document.getElementById('content-input').value.substring(0, 100));
-            console.log('Form data being sent:');
-            console.log('- Title:', document.getElementById('title').value);
-            console.log('- Content length:', document.getElementById('content-input').value.length);
         });
 
         // AI helper for note writing
@@ -226,7 +182,6 @@
         const aiApplyBtn = document.getElementById('aiApplyBtn');
         const aiStatusEl = document.getElementById('aiStatus');
         const aiResponseEl = document.getElementById('aiResponse');
-
         let aiLastResponse = '';
 
         function setAiStatus(message, isError = false) {
@@ -240,11 +195,9 @@
                 setAiStatus('Please enter a request for the AI assistant.', true);
                 return;
             }
-
             setAiStatus('Generating suggestion from Ollama...');
             aiGenerateBtn.disabled = true;
             aiApplyBtn.disabled = true;
-
             try {
                 const response = await fetch("{{ url_for('main.ai_chat') }}", {
                     method: 'POST',
@@ -255,12 +208,8 @@
                         content_text: quill.getText().trim()
                     })
                 });
-
                 const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(data.error || 'AI request failed');
-                }
-
+                if (!response.ok) throw new Error(data.error || 'AI request failed');
                 aiLastResponse = data.response || '';
                 aiResponseEl.innerHTML = aiLastResponse;
                 aiResponseEl.hidden = false;
@@ -276,28 +225,15 @@
         }
 
         function applyAiSuggestion() {
-            if (!aiLastResponse) {
-                return;
-            }
-
-            const delta = quill.clipboard.convert({
-                html: aiLastResponse
-            });
+            if (!aiLastResponse) return;
+            const delta = quill.clipboard.convert({ html: aiLastResponse });
             quill.setContents(delta, 'user');
             quill.setSelection(quill.getLength(), 0, 'silent');
-            setAiStatus('Recommendation applied. Existing note content was replaced.');
+            setAiStatus('Recommendation applied.');
         }
 
         aiGenerateBtn.addEventListener('click', generateAiSuggestion);
         aiApplyBtn.addEventListener('click', applyAiSuggestion);
-
-        // Debug: Log the initial state when page loads
-        window.addEventListener('load', function() {
-            console.log('=== PAGE LOADED ===');
-            console.log('Quill content (HTML):', quill.root.innerHTML);
-            console.log('Quill content (Text):', quill.getText());
-            console.log('Hidden input value:', document.getElementById('content-input').value);
-        });
 
         // Flash notifications: auto-hide and manual close
         document.querySelectorAll('.flash').forEach((flashEl) => {
@@ -308,7 +244,6 @@
                     setTimeout(() => flashEl.remove(), 220);
                 });
             }
-
             setTimeout(() => {
                 if (flashEl.isConnected) {
                     flashEl.classList.add('flash-hiding');
@@ -317,5 +252,4 @@
             }, 4500);
         });
     </script>
-</body>
-</html>
+{% endblock %}

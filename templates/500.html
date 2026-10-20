@@ -1,23 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>500 - Server Error</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <div class="container">
+{% extends "base.html" %}
+
+{% block title %}500 - Server Error{% endblock %}
+
+{% block header %}
         <header>
             <h1>500</h1>
             <a href="{{ url_for('main.index') }}" class="btn btn-secondary">← Back to Home</a>
         </header>
+{% endblock %}
 
+{% block content %}
         <div class="empty-state" style="padding: 100px 20px;">
             <h2 style="font-size: 2rem; margin-bottom: 20px; color: #e74c3c;">Server Error</h2>
             <p style="font-size: 1.1rem; color: #999; margin-bottom: 30px;">Something went wrong on our end. Please try again later.</p>
             <a href="{{ url_for('main.index') }}" class="btn btn-primary">Go to Notes</a>
         </div>
-    </div>
-</body>
-</html>
+{% endblock %}

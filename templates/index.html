@@ -1,15 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notepad Web</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <!-- Quill Rich Text Editor -->
-    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
-</head>
-<body>
-    <div class="container">
+{% extends "base.html" %}
+
+{% block title %}Notepad Web{% endblock %}
+
+{% block header %}
         <header>
             <div class="header-left">
                 <h1>📝 Notepad Web</h1>
@@ -51,20 +44,9 @@
                 </div>
             </div>
         </header>
+{% endblock %}
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="flash-messages">
-                    {% for category, message in messages %}
-                        <div class="flash flash-{{ category }}" role="alert">
-                            <span class="flash-text">{{ message }}</span>
-                            <button type="button" class="flash-close" aria-label="Close notification">&times;</button>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
-
+{% block content %}
         {% if notes %}
             <div class="notes-grid" id="notesGrid">
                 {% for note in notes %}
@@ -348,5 +330,252 @@
         // Initialize export button state
         updateExportButton();
     </script>
-</body>
-</html>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        const toggle = document.getElementById('viewToggle');
+        const grid = document.getElementById('notesGrid');
+        const searchInput = document.getElementById('searchInput');
+
+        // Load saved preference
+        const savedView = localStorage.getItem('notepadView');
+        if (savedView === 'list') {
+            toggle.checked = true;
+            grid.classList.add('list-view');
+        }
+
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const themeToggleInput = document.getElementById('themeToggleInput');
+        const themeLabel = themeToggle.querySelector('.theme-label');
+        const savedTheme = localStorage.getItem('notepadTheme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-theme');
+            themeToggleInput.checked = true;
+            themeLabel.textContent = '☀️';
+        }
+
+        themeToggle.addEventListener('click', function(e) {
+            // Prevent double-fire from label click
+            e.preventDefault();
+            document.body.classList.toggle('dark-theme');
+            const isDark = document.body.classList.contains('dark-theme');
+            themeToggleInput.checked = isDark;
+            themeLabel.textContent = isDark ? '☀️' : '🌙';
+            localStorage.setItem('notepadTheme', isDark ? 'dark' : 'light');
+        });
+
+        // Hamburger menu toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const headerActions = document.getElementById('headerActions');
+
+        if (menuToggle && headerActions) {
+            menuToggle.addEventListener('click', function() {
+                headerActions.classList.toggle('menu-open');
+                const icon = this.querySelector('.menu-icon');
+                icon.textContent = headerActions.classList.contains('menu-open') ? '✕' : '☰';
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!headerActions.contains(e.target) && !menuToggle.contains(e.target)) {
+                    headerActions.classList.remove('menu-open');
+                    menuToggle.querySelector('.menu-icon').textContent = '☰';
+                }
+            });
+        }
+
+        toggle.addEventListener('change', function() {
+            if (this.checked) {
+                grid.classList.add('list-view');
+                localStorage.setItem('notepadView', 'list');
+            } else {
+                grid.classList.remove('list-view');
+                localStorage.setItem('notepadView', 'grid');
+            }
+        });
+
+        // Search functionality
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase().trim();
+                const cards = grid.querySelectorAll('.note-card');
+                let visibleCount = 0;
+
+                cards.forEach(card => {
+                    const title = card.querySelector('.note-title')?.textContent.toLowerCase() || '';
+                    const content = card.querySelector('.note-content')?.textContent.toLowerCase() || '';
+                    const matches = !query || title.includes(query) || content.includes(query);
+                    card.style.display = matches ? '' : 'none';
+                    if (matches) visibleCount++;
+                });
+
+                // Show empty state if no results
+                let emptyState = grid.parentElement.querySelector('.empty-state');
+                if (visibleCount === 0 && query) {
+                    if (!emptyState) {
+                        emptyState = document.createElement('div');
+                        emptyState.className = 'empty-state';
+                        grid.parentElement.appendChild(emptyState);
+                    }
+                    emptyState.style.display = 'block';
+                    emptyState.innerHTML = `<p>No notes found for "${query}"</p>`;
+                } else if (emptyState) {
+                    emptyState.style.display = 'none';
+                }
+            });
+        }
+
+        // Flash notifications: auto-hide and manual close
+        document.querySelectorAll('.flash').forEach((flashEl) => {
+            const closeBtn = flashEl.querySelector('.flash-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    flashEl.classList.add('flash-hiding');
+                    setTimeout(() => flashEl.remove(), 220);
+                });
+            }
+
+            setTimeout(() => {
+                if (flashEl.isConnected) {
+                    flashEl.classList.add('flash-hiding');
+                    setTimeout(() => flashEl.remove(), 220);
+                }
+            }, 4500);
+        });
+
+        // Note selection and export
+        const selectAllBtn = document.getElementById('selectAllBtn');
+        const deselectAllBtn = document.getElementById('deselectAllBtn');
+        const exportSelectedPdfBtn = document.getElementById('exportSelectedPdfBtn');
+        const exportSelectedDocxBtn = document.getElementById('exportSelectedDocxBtn');
+        const noteCards = document.querySelectorAll('.note-card');
+        const checkboxes = document.querySelectorAll('.note-select');
+
+        function updateExportButton() {
+            const checked = document.querySelectorAll('.note-select:checked');
+            const count = checked.length;
+            const hasSelection = count > 0;
+            
+            // Update PDF export button
+            if (exportSelectedPdfBtn) {
+                exportSelectedPdfBtn.style.opacity = hasSelection ? '1' : '0.5';
+                exportSelectedPdfBtn.style.pointerEvents = hasSelection ? 'auto' : 'none';
+            }
+            // Update Word export button
+            if (exportSelectedDocxBtn) {
+                exportSelectedDocxBtn.style.opacity = hasSelection ? '1' : '0.5';
+                exportSelectedDocxBtn.style.pointerEvents = hasSelection ? 'auto' : 'none';
+            }
+        }
+
+        if (selectAllBtn) {
+            selectAllBtn.addEventListener('click', function() {
+                checkboxes.forEach(cb => {
+                    const card = cb.closest('.note-card');
+                    if (card && card.style.display !== 'none') {
+                        cb.checked = true;
+                    }
+                });
+                updateExportButton();
+            });
+        }
+
+        if (deselectAllBtn) {
+            deselectAllBtn.addEventListener('click', function() {
+                checkboxes.forEach(cb => cb.checked = false);
+                updateExportButton();
+            });
+        }
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', updateExportButton);
+        });
+
+        if (exportSelectedPdfBtn) {
+            exportSelectedPdfBtn.addEventListener('click', function() {
+                const selected = document.querySelectorAll('.note-select:checked');
+                if (selected.length === 0) {
+                    alert('Please select at least one note to export.');
+                    return;
+                }
+                const noteIds = Array.from(selected).map(cb => cb.dataset.noteId);
+                
+                exportSelectedPdfBtn.textContent = '⏳ Exporting...';
+                exportSelectedPdfBtn.disabled = true;
+                
+                fetch('/export/pdf/selected', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ note_ids: noteIds })
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Export failed');
+                    return response.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'notepad-notes-selected.pdf';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                })
+                .catch(err => {
+                    alert('Error exporting notes: ' + err.message);
+                })
+                .finally(() => {
+                    exportSelectedPdfBtn.textContent = '📄 Export Selected as PDF';
+                    exportSelectedPdfBtn.disabled = false;
+                });
+            });
+        }
+
+        if (exportSelectedDocxBtn) {
+            exportSelectedDocxBtn.addEventListener('click', function() {
+                const selected = document.querySelectorAll('.note-select:checked');
+                if (selected.length === 0) {
+                    alert('Please select at least one note to export.');
+                    return;
+                }
+                const noteIds = Array.from(selected).map(cb => cb.dataset.noteId);
+                
+                exportSelectedDocxBtn.textContent = '⏳ Exporting...';
+                exportSelectedDocxBtn.disabled = true;
+                
+                fetch('/export/docx/selected', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ note_ids: noteIds })
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Export failed');
+                    return response.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'notepad-notes-selected.docx';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                })
+                .catch(err => {
+                    alert('Error exporting notes: ' + err.message);
+                })
+                .finally(() => {
+                    exportSelectedDocxBtn.textContent = '📘 Export Selected as Word';
+                    exportSelectedDocxBtn.disabled = false;
+                });
+            });
+        }
+
+        // Initialize export button state
+        updateExportButton();
+    </script>
+{% endblock %}

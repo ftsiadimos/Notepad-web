@@ -1,18 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About - Notepad Web</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <div class="container">
+{% extends "base.html" %}
+
+{% block title %}About - Notepad Web{% endblock %}
+
+{% block header %}
         <header>
             <h1>ℹ️ About Notepad Web</h1>
             <a href="{{ url_for('main.index') }}" class="btn btn-secondary">← Back to Notes</a>
         </header>
+{% endblock %}
 
+{% block content %}
         <div class="about-content">
             <!-- Hero Section -->
             <section class="about-hero">
@@ -52,12 +49,12 @@
                         <p>Built-in AI writing help via Ollama</p>
                     </div>
                     <div class="feature-card">
-                        <span class="feature-icon">�</span>
+                        <span class="feature-icon">📘</span>
                         <h3>Word Export</h3>
                         <p>Export notes to Microsoft Word (.docx) format</p>
                     </div>
                     <div class="feature-card">
-                        <span class="feature-icon">�📱</span>
+                        <span class="feature-icon">📱</span>
                         <h3>Responsive</h3>
                         <p>Works beautifully on desktop, tablet, and mobile</p>
                     </div>
@@ -108,8 +105,9 @@
                 </div>
             </section>
         </div>
-    </div>
+{% endblock %}
 
+{% block scripts %}
     <script>
         // Apply saved theme on page load
         (function() {
@@ -119,5 +117,4 @@
             }
         })();
     </script>
-</body>
-</html>
+{% endblock %}

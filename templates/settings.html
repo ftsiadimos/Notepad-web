@@ -1,31 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings - Notepad Web</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <div class="container">
+{% extends "base.html" %}
+
+{% block title %}Settings - Notepad Web{% endblock %}
+
+{% block header %}
         <header>
             <h1>⚙ Settings</h1>
             <a href="{{ url_for('main.index') }}" class="btn btn-secondary">← Back to Notes</a>
         </header>
+{% endblock %}
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="flash-messages">
-                    {% for category, message in messages %}
-                        <div class="flash flash-{{ category }}" role="alert">
-                            <span class="flash-text">{{ message }}</span>
-                            <button type="button" class="flash-close" aria-label="Close notification">&times;</button>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
-
+{% block content %}
         <form method="post" class="note-form">
             <div class="form-group">
                 <label for="theme">Theme</label>
@@ -67,8 +51,9 @@
                 <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Cancel</a>
             </div>
         </form>
-    </div>
+{% endblock %}
 
+{% block scripts %}
     <script>
         // Apply saved theme on page load
         (function() {
@@ -89,8 +74,6 @@
         }
 
         // Flash notifications: auto-hide and manual close
-
-        // Flash notifications: auto-hide and manual close
         document.querySelectorAll('.flash').forEach((flashEl) => {
             const closeBtn = flashEl.querySelector('.flash-close');
             if (closeBtn) {
@@ -108,5 +91,4 @@
             }, 4500);
         });
     </script>
-</body>
-</html>
+{% endblock %}
