@@ -19,6 +19,16 @@
             </div>
 
             <div class="form-group">
+                <label for="category">Category</label>
+                <select id="category" name="category" class="form-control">
+                    <option value="" {% if not note.category %}selected{% endif %}>None</option>
+                    {% for cat in ['Work', 'Personal', 'Ideas', 'To-Do', 'Journal', 'Other'] %}
+                    <option value="{{ cat }}" {% if note.category == cat %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
                 <label for="content">Content</label>
                 <div id="editor"></div>
                 <div style="margin-top: 8px; display: flex; gap: 8px;">

@@ -12,10 +12,11 @@ from . import main_bp
 def index():
     try:
         notes = Note.query.order_by(Note.updated_at.desc()).all()
-        return render_template('index.html', notes=notes)
+        categories = sorted(list(set(note.category for note in notes if note.category)))
+        return render_template('index.html', notes=notes, categories=categories)
     except Exception as e:
         flash(f'Error loading notes: {str(e)}', 'warning')
-        return render_template('index.html', notes=[])
+        return render_template('index.html', notes=[], categories=[])
 
 
 @main_bp.route('/about')
@@ -35,12 +36,13 @@ def note_new():
         try:
             title = request.form.get('title', '').strip() or 'Untitled'
             content = request.form.get('content', '').strip()
+            category = request.form.get('category', '').strip() or None
 
             if len(title) > 200:
                 flash('Title is too long (max 200 characters)', 'warning')
                 return render_template('note_form.html', note=None)
 
-            note = Note(title=title, content=content)
+            note = Note(title=title, content=content, category=category)
             db.session.add(note)
             db.session.commit()
             flash('Note created successfully!', 'success')
@@ -59,6 +61,7 @@ def note_edit(note_id):
         if request.method == 'POST':
             title = request.form.get('title', '').strip() or 'Untitled'
             content = request.form.get('content', '').strip()
+            category = request.form.get('category', '').strip() or None
 
             if len(title) > 200:
                 flash('Title is too long (max 200 characters)', 'warning')
@@ -66,6 +69,7 @@ def note_edit(note_id):
 
             note.title = title
             note.content = content
+            note.category = category
             db.session.commit()
             flash('Note updated successfully!', 'success')
             return redirect(url_for('main.index'))

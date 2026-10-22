@@ -5,6 +5,7 @@ class Note(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False, default='Untitled')
     content = db.Column(db.Text, nullable=False, default='')
+    category = db.Column(db.String(50), nullable=True, index=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -16,6 +17,7 @@ class Note(db.Model):
             'id': self.id,
             'title': self.title,
             'content': self.content,
+            'category': self.category,
             'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else None,
             'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S') if self.updated_at else None,
         }

@@ -77,76 +77,359 @@
 
 /* ===== Dark Theme ===== */
 body.dark-theme {
-    --bg-primary: #1a1d23;
-    --bg-secondary: #242830;
-    --bg-tertiary: #2d323c;
+    /* Base palette — warm, deep, refined */
+    --bg-primary: #0f1117;
+    --bg-secondary: #1a1d27;
+    --bg-tertiary: #232733;
+    --bg-elevated: #2a2e3b;
+    
+    /* Text — warm whites, good contrast */
     --text-primary: #e4e6eb;
     --text-secondary: #b0b3b8;
     --text-muted: #6b7280;
-    --text-heading: #e8eaed;
-    --border-color: #3a3f4a;
-    --border-focus: #3498db;
-    --shadow-color: rgba(0, 0, 0, 0.3);
-    --shadow-hover: rgba(0, 0, 0, 0.45);
-    --code-bg: #2d323c;
-    --ai-bg: #1e2a3a;
-    --ai-border: #2a4a6a;
-    --ai-title: #a8d4ff;
-    --ai-subtitle: #8ab4d8;
-    --ai-status: #60a5fa;
-    --ai-response-bg: #242830;
-    --ai-response-border: #3a3f4a;
-    --placeholder-color: #6b7280;
-    --placeholder-muted: #6b7280;
-    --help-color: #9ca3af;
-    --toggle-bg: #4b5563;
-    --toggle-active: #3498db;
+    --text-heading: #f0f1f3;
+    
+    /* Borders — subtle, not harsh */
+    --border-color: #2d3140;
+    --border-focus: #5b8cd6;
+    --header-border: #2d3140;
+    
+    /* Shadows — soft, not harsh black */
+    --shadow-color: rgba(0, 0, 0, 0.25);
+    --shadow-hover: rgba(0, 0, 0, 0.4);
+    
+    /* Interactive */
+    --toggle-bg: #3a3f50;
+    --toggle-active: #4a7cf7;
     --toggle-knob: #ffffff;
-    --card-hover-bg: #2a3040;
-    --card-hover-text: #93c5fd;
-    --card-hover-bg-hover: #252d3a;
-    --header-border: #3a3f4a;
-    --flash-success-bg: #1a3a2a;
+    
+    /* Code blocks */
+    --code-bg: #1e2230;
+    
+    /* Card hover states — subtle, not glaring */
+    --card-hover-bg: #252a3a;
+    --card-hover-text: #7da3f5;
+    --card-hover-bg-hover: #2a3050;
+    
+    /* Focus ring */
+    --focus-outline: #5b8cd6;
+    
+    /* Flash messages — readable, not neon */
+    --flash-success-bg: #14291e;
     --flash-success-text: #6ee7b7;
-    --flash-success-border: #2d5a3a;
-    --flash-warning-bg: #3a3010;
+    --flash-success-border: #1e4a32;
+    --flash-warning-bg: #2a2010;
     --flash-warning-text: #fcd34d;
-    --flash-warning-border: #5a4a10;
-    --focus-outline: #60a5fa;
-    --quill-border: #3a3f4a;
-    --quill-toolbar-bg: #1e2a3a;
-    --quill-toolbar-text: #60a5fa;
-    --quill-toolbar-hover-bg: #1a2535;
-    --quill-strip-bg: #3a1a1a;
+    --flash-warning-border: #4a3a10;
+    
+    /* Quill editor dark theme */
+    --quill-border: #2d3140;
+    --quill-toolbar-bg: #1e2230;
+    --quill-toolbar-text: #8ab4f8;
+    --quill-toolbar-hover-bg: #252a3a;
+    --quill-strip-bg: #2a1a1a;
     --quill-strip-text: #f87171;
-    --quill-strip-hover-bg: #2a1515;
-    --ai-header-title: #a8d4ff;
-    --ai-subtitle-color: #8ab4d8;
-    --ai-status-color: #60a5fa;
-    --ai-response-bg: #242830;
-    --ai-response-border: #3a3f4a;
-    --help-color: #9ca3af;
-    --toggle-bg: #4b5563;
-    --toggle-active: #3498db;
-    --toggle-knob: #ffffff;
-    --card-hover-bg: #2a3040;
-    --card-hover-text: #93c5fd;
-    --card-hover-bg-hover: #252d3a;
-    --header-border: #3a3f4a;
-    --flash-success-bg: #1a3a2a;
-    --flash-success-text: #6ee7b7;
-    --flash-success-border: #2d5a3a;
-    --flash-warning-bg: #3a3010;
-    --flash-warning-text: #fcd34d;
-    --flash-warning-border: #5a4a10;
-    --focus-outline: #60a5fa;
-    --quill-border: #3a3f4a;
-    --quill-toolbar-bg: #1e2a3a;
-    --quill-toolbar-text: #60a5fa;
-    --quill-toolbar-hover-bg: #1a2535;
-    --quill-strip-bg: #3a1a1a;
-    --quill-strip-text: #f87171;
-    --quill-strip-hover-bg: #2a1515;
+    --quill-strip-hover-bg: #352020;
+    
+    /* AI helper — calm blues, not harsh */
+    --ai-bg: #151d2e;
+    --ai-border: #1e3050;
+    --ai-header-title: #93b8f0;
+    --ai-subtitle-color: #6b8ab8;
+    --ai-status-color: #5b8cd6;
+    --ai-response-bg: #1a2235;
+    --ai-response-border: #253045;
+    
+    /* Misc */
+    --placeholder-color: #555b6e;
+    --placeholder-muted: #555b6e;
+    --help-color: #7a8190;
+}
+
+/* Dark theme: Quill Snow overrides */
+body.dark-theme .ql-toolbar.ql-snow {
+    border-color: var(--quill-border);
+    background: var(--quill-toolbar-bg);
+    border-bottom-color: var(--quill-border);
+}
+
+body.dark-theme .ql-container.ql-snow {
+    border-color: var(--quill-border);
+    background: var(--bg-secondary);
+}
+
+body.dark-theme .ql-toolbar .ql-stroke {
+    stroke: #b0b3b8 !important;
+}
+
+body.dark-theme .ql-toolbar .ql-fill {
+    fill: #b0b3b8 !important;
+}
+
+body.dark-theme .ql-toolbar .ql-picker-label {
+    color: #b0b3b8 !important;
+}
+
+body.dark-theme .ql-toolbar .ql-picker-label:hover,
+body.dark-theme .ql-toolbar .ql-picker-label.ql-active {
+    color: #e4e6eb !important;
+}
+
+body.dark-theme .ql-toolbar .ql-picker-options {
+    background: var(--bg-tertiary) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.dark-theme .ql-toolbar .ql-picker-item {
+    color: #b0b3b8 !important;
+}
+
+body.dark-theme .ql-toolbar .ql-picker-item:hover,
+body.dark-theme .ql-toolbar .ql-picker-item.ql-selected {
+    color: #e4e6eb !important;
+}
+
+body.dark-theme .ql-editor {
+    color: var(--text-primary);
+}
+
+body.dark-theme .ql-editor.ql-blank::before {
+    color: var(--placeholder-color);
+}
+
+body.dark-theme .ql-snow .ql-tooltip {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+body.dark-theme .ql-snow .ql-tooltip input[type=text],
+body.dark-theme .ql-snow .ql-tooltip input[type=text]:focus {
+    background: var(--bg-secondary);
+    border-color: var(--border-focus);
+    color: var(--text-primary);
+}
+
+body.dark-theme .ql-snow .ql-tooltip .ql-preview {
+    color: var(--text-muted);
+}
+
+body.dark-theme .ql-snow .ql-tooltip .ql-action {
+    color: var(--border-focus);
+}
+
+body.dark-theme .ql-snow .ql-tooltip.ql-flip .ql-preview {
+    color: var(--text-muted);
+}
+
+/* Dark theme: button gradients — softer, more muted */
+body.dark-theme .btn-primary {
+    background: linear-gradient(135deg, #4a7cf7, #3a65d9);
+    border-color: #3a65d9;
+    box-shadow: 0 1px 3px rgba(74, 124, 247, 0.25);
+}
+
+body.dark-theme .btn-primary:hover {
+    background: linear-gradient(135deg, #5b8cf7, #4a7cf7);
+    box-shadow: 0 2px 6px rgba(74, 124, 247, 0.35);
+}
+
+body.dark-theme .btn-secondary {
+    background: linear-gradient(135deg, #5a5f70, #4a4f60);
+    border-color: #4a4f60;
+    box-shadow: 0 1px 3px rgba(90, 95, 112, 0.25);
+}
+
+body.dark-theme .btn-secondary:hover {
+    background: linear-gradient(135deg, #6a6f80, #5a5f70);
+    box-shadow: 0 2px 6px rgba(90, 95, 112, 0.35);
+}
+
+body.dark-theme .btn-export {
+    background: linear-gradient(135deg, #22a55f, #1b8a4e);
+    border-color: #1b8a4e;
+    box-shadow: 0 1px 3px rgba(34, 165, 95, 0.25);
+}
+
+body.dark-theme .btn-export:hover {
+    background: linear-gradient(135deg, #2bb86a, #22a55f);
+    box-shadow: 0 2px 6px rgba(34, 165, 95, 0.35);
+}
+
+body.dark-theme .btn-delete {
+    background: #b91c1c;
+}
+
+body.dark-theme .btn-delete:hover {
+    background: #dc2626;
+}
+
+/* Dark theme: icon buttons */
+body.dark-theme .btn-icon.btn-ghost:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+}
+
+body.dark-theme .btn-icon.btn-export:hover {
+    background: rgba(34, 165, 95, 0.2);
+    border-color: #22a55f;
+}
+
+/* Dark theme: export controls */
+body.dark-theme .export-controls {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+}
+
+body.dark-theme .export-controls .btn-small:hover {
+    background: var(--bg-elevated);
+}
+
+/* Dark theme: search box */
+body.dark-theme .search-box input {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+body.dark-theme .search-box input:focus {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(91, 140, 214, 0.2);
+}
+
+/* Dark theme: form inputs */
+body.dark-theme .form-group input,
+body.dark-theme .form-group textarea,
+body.dark-theme .form-group select {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+body.dark-theme .form-group input:focus,
+body.dark-theme .form-group textarea:focus,
+body.dark-theme .form-group select:focus {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(91, 140, 214, 0.15);
+}
+
+/* Dark theme: note card hover */
+body.dark-theme .note-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+/* Dark theme: empty state */
+body.dark-theme .empty-state {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+/* Dark theme: about page cards */
+body.dark-theme .feature-card {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+body.dark-theme .feature-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-theme .tech-item {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+}
+
+body.dark-theme .about-hero {
+    background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
+    border-color: var(--border-color);
+}
+
+body.dark-theme .about-cta {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+}
+
+/* Dark theme: checkbox accent */
+body.dark-theme .note-checkbox input[type="checkbox"] {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+}
+
+body.dark-theme .note-checkbox input[type="checkbox"]:checked {
+    background: var(--toggle-active);
+    border-color: var(--toggle-active);
+}
+
+/* Dark theme: flash message close buttons */
+body.dark-theme .flash-close {
+    color: inherit;
+}
+
+/* Dark theme: Quill clean/strip buttons */
+body.dark-theme .ql-toolbar.ql-snow button[data-format="clean"] {
+    background-color: var(--quill-toolbar-bg);
+    color: var(--quill-toolbar-text);
+}
+
+body.dark-theme .ql-toolbar.ql-snow button[data-format="clean"]:hover {
+    background-color: var(--quill-toolbar-hover-bg);
+}
+
+body.dark-theme .ql-toolbar.ql-snow button[data-format="stripFormat"] {
+    background-color: var(--quill-strip-bg);
+    color: var(--quill-strip-text);
+}
+
+body.dark-theme .ql-toolbar.ql-snow button[data-format="stripFormat"]:hover {
+    background-color: var(--quill-strip-hover-bg);
+}
+
+/* Dark theme: AI response */
+body.dark-theme .ai-response {
+    background: var(--ai-response-bg);
+    border-color: var(--ai-response-border);
+}
+
+/* Dark theme: menu toggle */
+body.dark-theme .menu-toggle {
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+body.dark-theme .menu-toggle:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--border-focus);
+}
+
+/* Dark theme: mobile menu */
+body.dark-theme .header-actions {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+/* Dark theme: view toggle */
+body.dark-theme .view-toggle {
+    color: var(--text-secondary);
+}
+
+body.dark-theme .theme-toggle {
+    color: var(--text-secondary);
+}
+
+/* Dark theme: note title link hover */
+body.dark-theme .note-title-link:hover {
+    color: var(--border-focus);
+}
+
+/* Dark theme: blockquote */
+body.dark-theme .note-content blockquote {
+    border-left-color: var(--border-focus);
+    color: var(--text-secondary);
+}
+
+/* Dark theme: section headings */
+body.dark-theme .about-section h2 {
+    border-bottom-color: var(--border-color);
 }
 
 * {
