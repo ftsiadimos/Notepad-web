@@ -5,18 +5,17 @@
 {% block header %}
         <header>
             <div class="header-left">
-                <h1>📝 Notepad Web</h1>
-            </div>
-            <div class="header-center">
-                <div class="search-box">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" id="searchInput" placeholder="Search notes...">
-                </div>
-            </div>
-            <div class="header-right">
+                
+                <button type="button" id="sidebarToggle" class="sidebar-toggle-btn" title="Toggle sidebar">
+                    <span class="toggle-icon">☰</span>
+                </button>
                 <button type="button" id="menuToggle" class="menu-toggle" title="Toggle menu">
                     <span class="menu-icon">☰</span>
                 </button>
+                <h1 style="margin-left: 8px;">📝 Notepad Web</h1>
+            </div>
+            <div class="header-right">
+
                 <div class="header-actions" id="headerActions">
                     <a href="{{ url_for('main.note_new') }}" class="btn btn-primary">+ New Note</a>
                     <div class="btn-group">
@@ -52,9 +51,41 @@
                 </div>
             </div>
         </header>
+
+        <!-- Search bar below header -->
+        <div class="search-bar-container">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="Search notes...">
+            </div>
+        </div>
 {% endblock %}
 
 {% block content %}
+    <div class="main-layout">
+        <!-- Left Sidebar: Category Menu -->
+        <aside class="category-sidebar" id="categorySidebar">
+            <nav class="category-list">
+                <a href="{{ url_for('main.index') }}" class="category-item {% if not request.args.get('category') %}active{% endif %}" data-category="">
+                    <span class="category-icon">📋</span>
+                    <span class="category-name">All Notes</span>
+                    <span class="category-count">{{ notes|length }}</span>
+                </a>
+                {% for category in categories %}
+                <a href="{{ url_for('main.index', category=category) }}" class="category-item {% if request.args.get('category') == category %}active{% endif %}" data-category="{{ category }}">
+                    <span class="category-icon">📁</span>
+                    <span class="category-name">{{ category }}</span>
+                    <span class="category-count">{{ notes|selectattr('category', 'equalto', category)|list|length }}</span>
+                </a>
+                {% endfor %}
+                {% if not categories %}
+                <p class="no-categories">No categories yet. Add categories when editing notes.</p>
+                {% endif %}
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="content-area">
         {% if notes %}
             <div class="notes-grid" id="notesGrid">
                 {% for note in notes %}
@@ -94,9 +125,31 @@
                 <a href="{{ url_for('main.note_new') }}" class="btn btn-primary">+ New Note</a>
             </div>
         {% endif %}
+            </div>
+            <!-- End content-area -->
+        </div>
+        <!-- End main-layout -->
     </div>
 
     <script>
+        // Sidebar toggle
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const categorySidebar = document.getElementById('categorySidebar');
+        const savedSidebarState = localStorage.getItem('notepadSidebar');
+        if (savedSidebarState === 'collapsed') {
+            categorySidebar.classList.add('collapsed');
+            if (sidebarToggle) sidebarToggle.classList.add('collapsed');
+        }
+        function toggleSidebar() {
+            categorySidebar.classList.toggle('collapsed');
+            const isCollapsed = categorySidebar.classList.contains('collapsed');
+            if (sidebarToggle) sidebarToggle.classList.toggle('collapsed', isCollapsed);
+            localStorage.setItem('notepadSidebar', isCollapsed ? 'collapsed' : 'expanded');
+        }
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', toggleSidebar);
+        }
+
         const toggle = document.getElementById('viewToggle');
         const grid = document.getElementById('notesGrid');
         const searchInput = document.getElementById('searchInput');

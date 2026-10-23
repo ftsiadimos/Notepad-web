@@ -11,12 +11,16 @@ from . import main_bp
 @main_bp.route('/')
 def index():
     try:
-        notes = Note.query.order_by(Note.updated_at.desc()).all()
-        categories = sorted(list(set(note.category for note in notes if note.category)))
-        return render_template('index.html', notes=notes, categories=categories)
+        category = request.args.get('category', '').strip()
+        if category:
+            notes = Note.query.filter(Note.category == category).order_by(Note.updated_at.desc()).all()
+        else:
+            notes = Note.query.order_by(Note.updated_at.desc()).all()
+        categories = sorted(list(set(note.category for note in Note.query.all() if note.category)))
+        return render_template('index.html', notes=notes, categories=categories, selected_category=category)
     except Exception as e:
         flash(f'Error loading notes: {str(e)}', 'warning')
-        return render_template('index.html', notes=[], categories=[])
+        return render_template('index.html', notes=[], categories=[], selected_category=None)
 
 
 @main_bp.route('/about')

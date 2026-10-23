@@ -447,6 +447,177 @@ body {
     transition: background 0.3s ease, color 0.3s ease;
 }
 
+/* ===== Main Layout with Sidebar ===== */
+.main-layout {
+    position: relative;
+    display: flex;
+    gap: 16px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Category Sidebar */
+.category-sidebar {
+    --sidebar-width: 240px;
+    width: var(--sidebar-width);
+    flex-shrink: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 1px 4px var(--shadow-color);
+    height: fit-content;
+    position: sticky;
+    top: 20px;
+    transition: all 0.3s ease;
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.sidebar-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-heading);
+    margin: 0;
+}
+
+.sidebar-toggle {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 4px 8px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    transition: all 0.15s ease;
+}
+
+.sidebar-toggle:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-color: var(--border-focus);
+}
+
+.category-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.category-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    transition: all 0.15s ease;
+    border: 1px solid transparent;
+}
+
+.category-item:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+}
+
+.category-item.active {
+    background: var(--card-hover-bg);
+    border-color: var(--border-focus);
+    color: var(--card-hover-text);
+    font-weight: 500;
+}
+
+.category-item.active .category-icon {
+    transform: scale(1.1);
+}
+
+.category-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+    transition: transform 0.15s ease;
+}
+
+.category-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.category-count {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.category-item.active .category-count {
+    background: var(--card-hover-bg-hover);
+    color: var(--card-hover-text);
+}
+
+.no-categories {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-style: italic;
+    padding: 8px 4px;
+    text-align: center;
+}
+
+/* Content Area */
+.content-area {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Collapsed sidebar state */
+.category-sidebar.collapsed {
+    width: 0;
+    padding: 16px 0;
+    overflow: hidden;
+    border-width: 0;
+    opacity: 0;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .main-layout {
+        flex-direction: column;
+    }
+
+    .category-sidebar {
+        width: 100%;
+        position: static;
+        margin-bottom: 16px;
+    }
+
+    .category-list {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .category-item {
+        padding: 6px 12px;
+    }
+
+    .content-area {
+        width: 100%;
+    }
+}
+
 .container {
     max-width: 1100px;
     margin: 0 auto;
@@ -520,6 +691,35 @@ header h1 {
     color: var(--text-primary);
     font-size: 1.2rem;
     transition: all 0.15s ease;
+}
+
+/* Sidebar toggle button in header */
+.sidebar-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 6px 8px;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+}
+
+.sidebar-toggle-btn:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--border-focus);
+}
+
+.sidebar-toggle-btn.collapsed {
+    transform: rotate(180deg);
+}
+
+.sidebar-toggle-btn .toggle-icon {
+    line-height: 1;
 }
 
 .menu-toggle:hover {
@@ -614,6 +814,12 @@ header h1 {
 }
 
 /* Search Box */
+.search-bar-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
 .search-box {
     position: relative;
     display: flex;
