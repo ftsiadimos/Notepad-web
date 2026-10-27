@@ -1,17 +1,60 @@
 /* ===== CSS Custom Properties (Light Theme - Default) ===== */
 :root {
-    --bg-primary: #f5f7fa;
+    /* Base palette — clean, modern whites */
+    --bg-primary: #f8fafc;
     --bg-secondary: #ffffff;
-    --bg-tertiary: #eef2f7;
-    --text-primary: #333333;
-    --text-secondary: #555555;
-    --text-muted: #999999;
-    --text-heading: #2c3e50;
-    --border-color: #e1e5eb;
-    --border-focus: #3498db;
-    --shadow-color: rgba(0, 0, 0, 0.08);
-    --shadow-hover: rgba(0, 0, 0, 0.12);
-    --code-bg: #f4f4f4;
+    --bg-tertiary: #e8eef4;
+    --bg-elevated: #f0f4f8;
+    
+    /* Text colors — clean, readable */
+    --text-primary: #4a5568;
+    --text-secondary: #68728a;
+    --text-muted: #a0aec1;
+    --text-heading: #1e3a8a;
+    
+    /* Borders — subtle, clean */
+    --border-color: #c8d0e0;
+    --border-focus: #5b8cd6;
+    --header-border: #c8d0e0;
+    
+    /* Shadows — soft, modern */
+    --shadow-color: rgba(0, 0, 0, 0.06);
+    --shadow-hover: rgba(0, 0, 0, 0.10);
+    
+    /* Interactive elements */
+    --toggle-bg: #e8eef4;
+    --toggle-active: #5b8cd6;
+    --toggle-knob: #ffffff;
+    
+    /* Code blocks */
+    --code-bg: #f4f7fa;
+    
+    /* Card hover states — subtle, modern */
+    --card-hover-bg: #e8eef4;
+    --card-hover-text: #5b8cd6;
+    --card-hover-bg-hover: #f0f4f8;
+    
+    /* Focus ring */
+    --focus-outline: #5b8cd6;
+    
+    /* Flash messages — clean, readable */
+    --flash-success-bg: #d4edda;
+    --flash-success-text: #155724;
+    --flash-success-border: #c3e6cb;
+    --flash-warning-bg: #fff3cd;
+    --flash-warning-text: #856404;
+    --flash-warning-border: #ffeeba;
+    
+    /* Quill editor */
+    --quill-border: #c8d0e0;
+    --quill-toolbar-bg: #e8f4f8;
+    --quill-toolbar-text: #2980b9;
+    --quill-toolbar-hover-bg: #d0e8f0;
+    --quill-strip-bg: #ffe4e1;
+    --quill-strip-text: #e74c3c;
+    --quill-strip-hover-bg: #ffcccc;
+    
+    /* AI helper */
     --ai-bg: #f8fcff;
     --ai-border: #d8e9f6;
     --ai-title: #1f3a57;
@@ -19,60 +62,11 @@
     --ai-status: #1d4ed8;
     --ai-response-bg: #ffffff;
     --ai-response-border: #d1d5db;
-    --placeholder-color: #aaa;
-    --placeholder-muted: #999;
+    
+    /* Misc */
+    --placeholder-color: #a0aec1;
+    --placeholder-muted: #a0aec1;
     --help-color: #6b7280;
-    --toggle-bg: #ccc;
-    --toggle-active: #3498db;
-    --toggle-knob: #ffffff;
-    --card-hover-bg: #eef2ff;
-    --card-hover-text: #3730a3;
-    --card-hover-bg-hover: #e0e7ff;
-    --header-border: #e1e5eb;
-    --flash-success-bg: #d4edda;
-    --flash-success-text: #155724;
-    --flash-success-border: #c3e6cb;
-    --flash-warning-bg: #fff3cd;
-    --flash-warning-text: #856404;
-    --flash-warning-border: #ffeeba;
-    --focus-outline: #2563eb;
-    --quill-border: #e1e5eb;
-    --quill-toolbar-bg: #e8f4f8;
-    --quill-toolbar-text: #2980b9;
-    --quill-toolbar-hover-bg: #d0e8f0;
-    --quill-strip-bg: #ffe4e1;
-    --quill-strip-text: #e74c3c;
-    --quill-strip-hover-bg: #ffcccc;
-    --ai-header-title: #1f3a57;
-    --ai-subtitle-color: #4b5563;
-    --ai-status-color: #1d4ed8;
-    --ai-response-bg: #ffffff;
-    --ai-response-border: #d1d5db;
-    --help-color: #6b7280;
-    --toggle-bg: #ccc;
-    --toggle-active: #3498db;
-    --toggle-knob: #ffffff;
-    --card-hover-bg: #eef2ff;
-    --card-hover-text: #3730a3;
-    --card-hover-bg-hover: #e0e7ff;
-    --header-border: #e1e5eb;
-    --flash-success-bg: #d4edda;
-    --flash-success-text: #155724;
-    --flash-success-border: #c3e6cb;
-    --flash-warning-bg: #fff3cd;
-    --flash-warning-text: #856404;
-    --flash-warning-border: #ffeeba;
-    --focus-outline: #2563eb;
-    --quill-border: #e1e5eb;
-    --quill-toolbar-bg: #e8f4f8;
-    --quill-toolbar-text: #2980b9;
-    --quill-toolbar-hover-bg: #d0e8f0;
-    --quill-strip-bg: #ffe4e1;
-    --quill-strip-text: #e74c3c;
-    --quill-strip-hover-bg: #ffcccc;
-    --ai-header-title: #1f3a57;
-    --ai-subtitle-color: #4b5563;
-    --ai-status-color: #1d4ed8;
 }
 
 /* ===== Dark Theme ===== */

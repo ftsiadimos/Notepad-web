@@ -9,20 +9,20 @@
     <!-- Quill Rich Text Editor -->
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
 </head>
-<body>
+<body class="{% if dark_theme %}dark-theme{% endif %}">
     <div class="container">
         {% block header %}{% endblock %}
 
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                <div class="flash-messages">
+                <aside class="flash-messages" role="alert">
                     {% for category, message in messages %}
-                        <div class="flash flash-{{ category }}" role="alert">
+                        <div class="flash flash-{{ category }}">
                             <span class="flash-text">{{ message }}</span>
                             <button type="button" class="flash-close" aria-label="Close notification">&times;</button>
                         </div>
                     {% endfor %}
-                </div>
+                </aside>
             {% endif %}
         {% endwith %}
 
