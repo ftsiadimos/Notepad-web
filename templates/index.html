@@ -21,8 +21,8 @@
                     <div class="btn-group">
                         <button type="button" id="selectAllBtn" class="btn btn-ghost btn-icon" title="Select all notes">☑</button>
                         <button type="button" id="deselectAllBtn" class="btn btn-ghost btn-icon" title="Deselect all notes">☐</button>
-                        <button type="button" id="exportSelectedPdfBtn" class="btn btn-export btn-icon" title="Export selected as PDF">📄</button>
-                        <button type="button" id="exportSelectedDocxBtn" class="btn btn-export btn-icon" title="Export selected as Word">📘</button>
+                        <button type="button" id="exportSelectedPdfBtn" class="btn btn-export btn-icon" title="Export selected as PDF" disabled>📄</button>
+                        <button type="button" id="exportSelectedDocxBtn" class="btn btn-export btn-icon" title="Export selected as Word" disabled>📘</button>
                     </div>
                     <div class="btn-group">
                         <select id="categoryFilter" class="btn btn-ghost" title="Filter by category" style="padding-right: 20px; padding-left: 10px; cursor: pointer;">
@@ -57,6 +57,10 @@
             <div class="search-box">
                 <span class="search-icon">🔍</span>
                 <input type="text" id="searchInput" placeholder="Search notes...">
+                <div class="search-actions" id="bulkDeleteGroup" style="display: none;">
+                    <span id="selectionCount" class="selection-count">0 selected</span>
+                    <button type="button" id="bulkDeleteBtn" class="btn btn-danger btn-sm" title="Delete selected notes">🗑️ Delete Selected</button>
+                </div>
             </div>
         </div>
 {% endblock %}
@@ -284,6 +288,9 @@
         const deselectAllBtn = document.getElementById('deselectAllBtn');
         const exportSelectedPdfBtn = document.getElementById('exportSelectedPdfBtn');
         const exportSelectedDocxBtn = document.getElementById('exportSelectedDocxBtn');
+        const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+        const bulkDeleteGroup = document.getElementById('bulkDeleteGroup');
+        const selectionCount = document.getElementById('selectionCount');
         const noteCards = document.querySelectorAll('.note-card');
         const checkboxes = document.querySelectorAll('.note-select');
 
@@ -292,16 +299,54 @@
             const count = checked.length;
             const hasSelection = count > 0;
             
+            // Update bulk delete group visibility
+            if (bulkDeleteGroup) {
+                bulkDeleteGroup.style.display = hasSelection ? 'flex' : 'none';
+            }
+            if (selectionCount) {
+                selectionCount.textContent = count + ' selected';
+            }
+            
             // Update PDF export button
             if (exportSelectedPdfBtn) {
+                exportSelectedPdfBtn.disabled = !hasSelection;
                 exportSelectedPdfBtn.style.opacity = hasSelection ? '1' : '0.5';
                 exportSelectedPdfBtn.style.pointerEvents = hasSelection ? 'auto' : 'none';
             }
             // Update Word export button
             if (exportSelectedDocxBtn) {
+                exportSelectedDocxBtn.disabled = !hasSelection;
                 exportSelectedDocxBtn.style.opacity = hasSelection ? '1' : '0.5';
                 exportSelectedDocxBtn.style.pointerEvents = hasSelection ? 'auto' : 'none';
             }
+        }
+
+        if (bulkDeleteBtn) {
+            bulkDeleteBtn.addEventListener('click', function() {
+                const selected = document.querySelectorAll('.note-select:checked');
+                if (selected.length === 0) {
+                    return;
+                }
+                if (!confirm(`Are you sure you want to delete ${selected.length} note(s)? This cannot be undone.`)) {
+                    return;
+                }
+                
+                // Create a form to submit the selected note IDs
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ url_for("main.notes_bulk_delete") }}';
+                
+                selected.forEach(cb => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'note_ids';
+                    input.value = cb.dataset.noteId;
+                    form.appendChild(input);
+                });
+                
+                document.body.appendChild(form);
+                form.submit();
+            });
         }
 
         if (selectAllBtn) {

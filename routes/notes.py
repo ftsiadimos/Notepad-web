@@ -94,3 +94,25 @@ def note_delete(note_id):
         db.session.rollback()
         flash(f'Error deleting note: {str(e)}', 'warning')
     return redirect(url_for('main.index'))
+
+
+@main_bp.route('/notes/bulk-delete', methods=['POST'])
+def notes_bulk_delete():
+    try:
+        note_ids = request.form.getlist('note_ids')
+        if not note_ids:
+            flash('No notes selected.', 'warning')
+            return redirect(url_for('main.index'))
+
+        count = 0
+        for note_id in note_ids:
+            note = Note.query.get(int(note_id))
+            if note:
+                db.session.delete(note)
+                count += 1
+        db.session.commit()
+        flash(f'{count} note{"s" if count != 1 else ""} deleted successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting notes: {str(e)}', 'warning')
+    return redirect(url_for('main.index'))

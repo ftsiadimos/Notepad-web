@@ -853,6 +853,24 @@ header h1 {
     opacity: 0.6;
 }
 
+.search-box .search-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 12px;
+    flex-shrink: 0;
+}
+
+.search-box .search-actions .selection-count {
+    font-size: 0.8rem;
+    padding: 4px 10px;
+}
+
+.search-box .search-actions .btn-sm {
+    padding: 4px 10px;
+    font-size: 0.8rem;
+}
+
 /* Buttons */
 .btn {
     display: inline-flex;
@@ -938,6 +956,41 @@ header h1 {
 
 .btn-delete:hover {
     background: #c0392b;
+}
+
+.btn-danger {
+    background: #e74c3c;
+    color: white;
+    border: 1px solid #c0392b;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+    border-color: #a93226;
+}
+
+.selection-count {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #e74c3c;
+    background: #fdf2f2;
+    border: 1px solid #f5c6cb;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
+body.dark-theme .selection-count {
+    color: #ff6b6b;
+    background: #2d1b1b;
+    border-color: #4a2525;
+}
+
+#bulkDeleteGroup {
+    align-items: center;
+    gap: 8px;
 }
 
 .btn-small {
