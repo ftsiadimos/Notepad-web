@@ -142,6 +142,12 @@ def _process_inline_elements(element, paragraph, doc):
                 text = child.get_text()
                 if text:
                     _add_run_with_formatting(paragraph, text, attrs)
+            elif tag == 'mark':
+                # <mark> highlights text with a yellow background
+                text = child.get_text()
+                if text:
+                    run = _add_run_with_formatting(paragraph, text, attrs)
+                    run.font.highlight_color = 'FFFF00'  # yellow highlight
             elif tag == 'br':
                 paragraph.add_run('\n')
             elif tag == 'code':
@@ -208,6 +214,15 @@ def _parse_quill_html(html_content, doc):
             elif tag == 'pre':
                 code = element.find('code')
                 code_text = code.get_text() if code else element.get_text()
+                p = doc.add_paragraph(code_text)
+                p.paragraph_format.left_indent = Pt(24)
+                p.paragraph_format.right_indent = Pt(24)
+                for run in p.runs:
+                    run.font.name = 'Courier New'
+                    run.font.size = Pt(10)
+            elif tag == 'div' and 'ql-code-block-container' in (element.get('class') or []):
+                # Quill code block container
+                code_text = element.get_text()
                 p = doc.add_paragraph(code_text)
                 p.paragraph_format.left_indent = Pt(24)
                 p.paragraph_format.right_indent = Pt(24)
