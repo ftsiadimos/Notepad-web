@@ -22,8 +22,10 @@ def settings():
         ollama_url = request.form.get('ollama_url', '').strip()
         ollama_model = request.form.get('ollama_model', '').strip()
         theme = request.form.get('theme', 'light').strip()
+        ai_instructions = request.form.get('ai_instructions', '').strip()
 
         set_setting_value('theme', theme)
+        set_setting_value('ai_instructions', ai_instructions)
 
         if ollama_url and not (ollama_url.startswith('http://') or ollama_url.startswith('https://')):
             flash('Ollama API URL must start with http:// or https://', 'warning')
@@ -53,6 +55,7 @@ def settings():
     ollama_url = get_setting_value('ollama_api_url', os.environ.get('OLLAMA_API_URL', DEFAULT_OLLAMA_URL))
     ollama_model = get_setting_value('ollama_model', os.environ.get('OLLAMA_MODEL', DEFAULT_OLLAMA_MODEL))
     current_theme = get_setting_value('theme', 'light')
+    ai_instructions = get_setting_value('ai_instructions', '')
 
     available_models, model_fetch_error = fetch_ollama_models(ollama_url)
     if ollama_model and ollama_model not in available_models:
@@ -69,4 +72,5 @@ def settings():
         default_url=DEFAULT_OLLAMA_URL,
         default_model=DEFAULT_OLLAMA_MODEL,
         current_theme=current_theme,
+        ai_instructions=ai_instructions,
     )

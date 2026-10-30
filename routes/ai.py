@@ -23,15 +23,21 @@ def ai_chat():
 
     ollama_url = get_setting_value('ollama_api_url', os.environ.get('OLLAMA_API_URL', DEFAULT_OLLAMA_URL)).rstrip('/')
     ollama_model = get_setting_value('ollama_model', os.environ.get('OLLAMA_MODEL', DEFAULT_OLLAMA_MODEL))
+    ai_instructions = get_setting_value('ai_instructions', '')
     api_url = f'{ollama_url}/api/generate'
 
-    system_context = (
+    base_context = (
         'You are an assistant that edits existing notes. '
         'Read the current note content and apply the user request as recommendations and improvements. '
         'Return ONLY HTML that should replace the existing note content. '
         'Preserve the original formatting style as much as possible (font sizes, headings, lists, emphasis, spacing). '
         'Do not wrap the answer in markdown fences. Do not include explanations or commentary.'
     )
+
+    if ai_instructions:
+        system_context = f'{base_context}\n\nAdditional instructions:\n{ai_instructions}'
+    else:
+        system_context = base_context
     full_prompt = (
         f'{system_context}\n\n'
         f'Current note content (HTML):\n{note_content_html if note_content_html else "(empty)"}\n\n'

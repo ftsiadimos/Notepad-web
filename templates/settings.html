@@ -46,6 +46,17 @@
                 {% endif %}
             </div>
 
+            <div class="form-group">
+                <label for="ai_instructions">AI Instructions</label>
+                <textarea
+                    id="ai_instructions"
+                    name="ai_instructions"
+                    rows="5"
+                    placeholder="Give the AI custom instructions for how to edit your notes..."
+                >{{ ai_instructions }}</textarea>
+                <small class="field-help">Optional instructions that will be sent to the AI along with every request. Leave empty to use the default behavior.</small>
+            </div>
+
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">Save Settings</button>
                 <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Cancel</a>
