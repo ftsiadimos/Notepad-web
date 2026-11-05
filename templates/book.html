@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Book View - Notepad Web{% endblock %}
+
+{% block header %}
+<header>
+    <div class="header-left">
+        <button type="button" id="sidebarToggle" class="sidebar-toggle-btn" title="Toggle sidebar">
+            <span class="toggle-icon">☰</span>
+        </button>
+        <button type="button" id="menuToggle" class="menu-toggle" title="Toggle menu">
+            <span class="menu-icon">☰</span>
+        </button>
+        <h1 style="margin-left: 8px;">📖 Book View</h1>
+    </div>
+    <div class="header-right">
+        <div class="header-actions" id="headerActions">
+            <a href="{{ url_for('main.index') }}" class="btn btn-secondary">← Back to Notes</a>
+            <span class="page-indicator" id="pageIndicator">Page 1 of {{ notes|length if notes else 1 }}</span>
+        </div>
+    </div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="book-container" id="bookContainer">
+    <!-- Table of Contents Sidebar -->
+    <aside class="toc-sidebar" id="tocSidebar">
+        <div class="toc-header">
+            <h3>📑 Table of Contents</h3>
+            <button type="button" class="toc-close" title="Close TOC">&times;</button>
+        </div>
+        <nav class="toc-list" id="tocList">
+            {% for note in notes %}
+            <a href="#" class="toc-item" data-index="{{ loop.index0 }}">
+                <span class="toc-title">{{ note.title }}</span>
+                <span class="toc-date">{{ note.updated_at.strftime('%Y-%m-%d') if note.updated_at else '' }}</span>
+            </a>
+            {% endfor %}
+        </nav>
+    </aside>
+
+    <!-- Book Pages -->
+    <div class="book-pages" id="bookPages">
+        {% if notes %}
+        {% for note in notes %}
+        <div class="book-page {% if loop.first %}active{% endif %}" data-index="{{ loop.index0 }}">
+            <div class="page-header">
+                <span class="page-number">{{ loop.index0 + 1 }}</span>
+                <h2 class="note-title">{{ note.title }}</h2>
+                <div class="note-meta">
+                    <span class="note-date">Updated: {{ note.updated_at.strftime('%Y-%m-%d %H:%M') if note.updated_at else 'N/A' }}</span>
+                    {% if note.category %}
+                    <span class="note-category">{{ note.category }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="page-content note-content">
+                {{ note.content | safe if note.content else '<p class="empty-note">No content</p>' }}
+            </div>
+            <div class="page-footer">
+                <div class="page-nav">
+                    {% if loop.index0 > 0 %}
+                    <a href="#" class="page-link prev-page" data-index="{{ loop.index0 - 1 }}">← Previous</a>
+                    {% else %}
+                    <span></span>
+                    {% endif %}
+                    {% if loop.index0 < notes|length - 1 %}
+                    <a href="#" class="page-link next-page" data-index="{{ loop.index0 + 1 }}">Next →</a>
+                    {% else %}
+                    <span></span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="book-page active">
+            <div class="page-content">
+                <p class="empty-note">No notes yet. <a href="{{ url_for('main.note_new') }}">Create your first note</a> to start reading in book mode.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Navigation Arrows -->
+    <button type="button" class="nav-arrow prev-arrow" id="prevArrow" title="Previous page (←)">❮</button>
+    <button type="button" class="nav-arrow next-arrow" id="nextArrow" title="Next page (→)">❯</button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    const pages = document.querySelectorAll('.book-page');
+    const tocItems = document.querySelectorAll('.toc-item');
+    const prevBtn = document.querySelector('.prev-page');
+    const nextBtn = document.querySelector('.next-page');
+    const prevArrow = document.getElementById('prevArrow');
+    const nextArrow = document.getElementById('nextArrow');
+    const pageIndicator = document.getElementById('pageIndicator');
+    const tocSidebar = document.getElementById('tocSidebar');
+    const tocClose = document.querySelector('.toc-close');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+
+    let currentPage = 0;
+    const totalPages = pages.length;
+
+    function showPage(index) {
+        if (index < 0 || index >= totalPages) return;
+        pages.forEach((page, i) => {
+            page.classList.toggle('active', i === index);
+        });
+        tocItems.forEach((item, i) => {
+            item.classList.toggle('active', i === index);
+        });
+        currentPage = index;
+        pageIndicator.textContent = `Page ${index + 1} of ${totalPages}`;
+    }
+
+    // Page navigation buttons
+    document.querySelectorAll('.prev-page').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const index = parseInt(btn.dataset.index);
+            showPage(index);
+        });
+    });
+
+    document.querySelectorAll('.next-page').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const index = parseInt(btn.dataset.index);
+            showPage(index);
+        });
+    });
+
+    // Arrow navigation
+    prevArrow.addEventListener('click', () => showPage(currentPage - 1));
+    nextArrow.addEventListener('click', () => showPage(currentPage + 1));
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') showPage(currentPage - 1);
+        if (e.key === 'ArrowRight') showPage(currentPage + 1);
+    });
+
+    // TOC navigation
+    tocItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            showPage(parseInt(item.dataset.index));
+            tocSidebar.classList.remove('open');
+        });
+    });
+
+    // Sidebar toggle
+    sidebarToggle?.addEventListener('click', () => {
+        tocSidebar.classList.toggle('open');
+    });
+
+    tocClose?.addEventListener('click', () => {
+        tocSidebar.classList.remove('open');
+    });
+})();
+</script>
+{% endblock %}
