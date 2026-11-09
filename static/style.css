@@ -2347,14 +2347,18 @@ body.dark-theme .btn-icon.btn-export:hover {
 
 /* Sidebar Toggle Button */
 .sidebar-toggle-btn {
-    display: none;
+    display: flex;
 }
 
 /* ============================================
    Book View Responsive Styles
    ============================================ */
 
-@media (max-width: 1024px) {
+@media (max-width: 900px) {
+    .sidebar-toggle-btn {
+        display: none;
+    }
+
     .book-page {
         padding: 30px 40px;
     }
