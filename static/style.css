@@ -2176,7 +2176,7 @@ body.dark-theme .btn-icon.btn-export:hover {
 }
 
 .note-title {
-    font-size: 2rem;
+    font-size: 1.3rem;
     color: var(--text-heading);
     margin: 0 0 12px 0;
     line-height: 1.3;
