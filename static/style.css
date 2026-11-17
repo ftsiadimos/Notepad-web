@@ -2333,6 +2333,35 @@ body.dark-theme .btn-icon.btn-export:hover {
     border: 1px solid var(--border-color);
 }
 
+/* Page Jump (Go to) Dropdown */
+.page-jump {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.page-jump label {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.page-jump select {
+    max-width: 260px;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.page-jump select:hover {
+    border-color: var(--border-focus);
+}
+
 /* Empty Note Style */
 .empty-note {
     color: var(--text-muted);

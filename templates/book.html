@@ -17,6 +17,12 @@
         <div class="header-actions" id="headerActions">
             <a href="{{ url_for('main.index') }}" class="btn btn-secondary">← Back to Notes</a>
             <span class="page-indicator" id="pageIndicator">Page 1 of {{ notes|length if notes else 1 }}</span>
+            {% if notes %}
+            <div class="page-jump">
+                <label for="pageSelect">Go to</label>
+                <select id="pageSelect"></select>
+            </div>
+            {% endif %}
         </div>
     </div>
 </header>
@@ -99,12 +105,34 @@
     const prevArrow = document.getElementById('prevArrow');
     const nextArrow = document.getElementById('nextArrow');
     const pageIndicator = document.getElementById('pageIndicator');
+    const pageSelect = document.getElementById('pageSelect');
     const tocSidebar = document.getElementById('tocSidebar');
     const tocClose = document.querySelector('.toc-close');
     const sidebarToggle = document.getElementById('sidebarToggle');
 
     let currentPage = 0;
     const totalPages = pages.length;
+
+    // Populate the "Go to" dropdown with every page
+    if (pageSelect) {
+        pages.forEach((page, i) => {
+            const title = page.querySelector('.note-title')?.textContent.trim() || 'Untitled';
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = `${i + 1}. ${title}`;
+            pageSelect.appendChild(option);
+        });
+        pageSelect.addEventListener('change', () => {
+            showPage(parseInt(pageSelect.value, 10));
+        });
+    }
+
+    function updateHash(index) {
+        const hash = `#page-${index + 1}`;
+        if (location.hash !== hash) {
+            history.replaceState(null, '', hash);
+        }
+    }
 
     function showPage(index) {
         if (index < 0 || index >= totalPages) return;
@@ -116,6 +144,14 @@
         });
         currentPage = index;
         pageIndicator.textContent = `Page ${index + 1} of ${totalPages}`;
+        if (pageSelect) pageSelect.value = String(index);
+        updateHash(index);
+    }
+
+    // Restore a deep-linked page from the URL hash (#page-N) on load
+    const initialMatch = location.hash.match(/^#page-(\d+)$/);
+    if (initialMatch) {
+        showPage(parseInt(initialMatch[1], 10) - 1);
     }
 
     // Page navigation buttons
