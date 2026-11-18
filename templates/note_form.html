@@ -22,8 +22,8 @@
                 <label for="category">Category</label>
                 <select id="category" name="category" class="form-control">
                     <option value="" {% if not note.category %}selected{% endif %}>None</option>
-                    {% for cat in ['Work', 'Personal', 'Ideas', 'To-Do', 'Journal', 'Other'] %}
-                    <option value="{{ cat }}" {% if note.category == cat %}selected{% endif %}>{{ cat }}</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.name }}" {% if note.category == cat.name %}selected{% endif %}>{{ cat.name }}</option>
                     {% endfor %}
                 </select>
             </div>

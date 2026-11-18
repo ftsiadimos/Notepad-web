@@ -62,6 +62,82 @@
                 <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Cancel</a>
             </div>
         </form>
+
+        <section class="categories-section">
+            <h2>📂 Manage Categories</h2>
+            <div class="category-form-wrapper">
+                <div class="form-group">
+                    <label for="new_category_name">Category Name</label>
+                    <input
+                        type="text"
+                        id="new_category_name"
+                        placeholder="Enter category name"
+                        maxlength="100"
+                    >
+                </div>
+                <div class="form-group">
+                    <label for="new_category_color">Color</label>
+                    <input
+                        type="color"
+                        id="new_category_color"
+                        value="#3498db"
+                    >
+                </div>
+                <button type="button" id="add_category_btn" class="btn btn-primary">Add Category</button>
+            </div>
+
+            <div id="categories_list" class="categories-list">
+                {% if categories %}
+                    {% for category in categories %}
+                        <div class="category-item" data-category-id="{{ category.id }}">
+                            <div class="category-info">
+                                <span class="category-color" style="background-color: {{ category.color }}"></span>
+                                <span class="category-name">{{ category.name }}</span>
+                            </div>
+                            <div class="category-actions">
+                                <button type="button" class="btn btn-sm btn-secondary edit-category-btn" data-category-id="{{ category.id }}">Edit</button>
+                                <button type="button" class="btn btn-sm btn-danger delete-category-btn" data-category-id="{{ category.id }}">Delete</button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="empty-message">No categories yet. Create one to organize your notes!</p>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- Edit Category Modal -->
+        <div id="edit_category_modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Edit Category</h3>
+                    <button type="button" class="modal-close" id="close_edit_modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="edit_category_name">Category Name</label>
+                        <input
+                            type="text"
+                            id="edit_category_name"
+                            placeholder="Enter category name"
+                            maxlength="100"
+                        >
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_category_color">Color</label>
+                        <input
+                            type="color"
+                            id="edit_category_color"
+                            value="#3498db"
+                        >
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancel_edit_btn">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="save_edit_btn">Save Changes</button>
+                </div>
+            </div>
+        </div>
 {% endblock %}
 
 {% block scripts %}
@@ -100,6 +176,249 @@
                     setTimeout(() => flashEl.remove(), 220);
                 }
             }, 4500);
+        });
+
+        // Category Management
+        let editingCategoryId = null;
+
+        const addCategoryBtn = document.getElementById('add_category_btn');
+        const newCategoryNameInput = document.getElementById('new_category_name');
+        const newCategoryColorInput = document.getElementById('new_category_color');
+        const categoriesList = document.getElementById('categories_list');
+        const editModal = document.getElementById('edit_category_modal');
+        const closeEditModalBtn = document.getElementById('close_edit_modal');
+        const cancelEditBtn = document.getElementById('cancel_edit_btn');
+        const saveEditBtn = document.getElementById('save_edit_btn');
+        const editCategoryNameInput = document.getElementById('edit_category_name');
+        const editCategoryColorInput = document.getElementById('edit_category_color');
+
+        addCategoryBtn.addEventListener('click', async () => {
+            const name = newCategoryNameInput.value.trim();
+            const color = newCategoryColorInput.value;
+
+            if (!name) {
+                alert('Please enter a category name');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/categories', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name, color }),
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    alert(error.error || 'Failed to create category');
+                    return;
+                }
+
+                const category = await response.json();
+                addCategoryToList(category);
+                newCategoryNameInput.value = '';
+                newCategoryColorInput.value = '#3498db';
+                showNotification('Category created successfully!', 'success');
+            } catch (error) {
+                console.error('Error creating category:', error);
+                alert('Error creating category: ' + error.message);
+            }
+        });
+
+        function addCategoryToList(category) {
+            if (categoriesList.querySelector('.empty-message')) {
+                categoriesList.innerHTML = '';
+            }
+
+            const categoryItem = document.createElement('div');
+            categoryItem.className = 'category-item';
+            categoryItem.dataset.categoryId = category.id;
+            categoryItem.innerHTML = `
+                <div class="category-info">
+                    <span class="category-color" style="background-color: ${category.color}"></span>
+                    <span class="category-name">${escapeHtml(category.name)}</span>
+                </div>
+                <div class="category-actions">
+                    <button type="button" class="btn btn-sm btn-secondary edit-category-btn" data-category-id="${category.id}">Edit</button>
+                    <button type="button" class="btn btn-sm btn-danger delete-category-btn" data-category-id="${category.id}">Delete</button>
+                </div>
+            `;
+
+            categoriesList.appendChild(categoryItem);
+            attachCategoryItemListeners(categoryItem);
+        }
+
+        function attachCategoryItemListeners(item) {
+            const editBtn = item.querySelector('.edit-category-btn');
+            const deleteBtn = item.querySelector('.delete-category-btn');
+
+            editBtn.addEventListener('click', () => openEditModal(item));
+            deleteBtn.addEventListener('click', () => deleteCategory(item));
+        }
+
+        document.querySelectorAll('.category-item').forEach(item => {
+            attachCategoryItemListeners(item);
+        });
+
+        function openEditModal(item) {
+            const categoryId = parseInt(item.dataset.categoryId);
+            const categoryName = item.querySelector('.category-name').textContent;
+            const categoryColor = item.querySelector('.category-color').style.backgroundColor;
+
+            editingCategoryId = categoryId;
+            editCategoryNameInput.value = categoryName;
+            editCategoryColorInput.value = rgbToHex(categoryColor);
+            editModal.style.display = 'flex';
+        }
+
+        function closeEditModalUI() {
+            editModal.style.display = 'none';
+            editingCategoryId = null;
+            editCategoryNameInput.value = '';
+            editCategoryColorInput.value = '#3498db';
+        }
+
+        closeEditModalBtn.addEventListener('click', closeEditModalUI);
+        cancelEditBtn.addEventListener('click', closeEditModalUI);
+
+        saveEditBtn.addEventListener('click', async () => {
+            if (!editingCategoryId) return;
+
+            const name = editCategoryNameInput.value.trim();
+            const color = editCategoryColorInput.value;
+
+            if (!name) {
+                alert('Please enter a category name');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/categories/${editingCategoryId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name, color }),
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    alert(error.error || 'Failed to update category');
+                    return;
+                }
+
+                const category = await response.json();
+                const item = categoriesList.querySelector(`[data-category-id="${editingCategoryId}"]`);
+                if (item) {
+                    item.querySelector('.category-name').textContent = category.name;
+                    item.querySelector('.category-color').style.backgroundColor = category.color;
+                }
+
+                closeEditModalUI();
+                showNotification('Category updated successfully!', 'success');
+            } catch (error) {
+                console.error('Error updating category:', error);
+                alert('Error updating category: ' + error.message);
+            }
+        });
+
+        async function deleteCategory(item) {
+            const categoryId = parseInt(item.dataset.categoryId);
+            const categoryName = item.querySelector('.category-name').textContent;
+
+            if (!confirm(`Are you sure you want to delete the category "${categoryName}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/categories/${categoryId}`, {
+                    method: 'DELETE',
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    alert(error.error || 'Failed to delete category');
+                    return;
+                }
+
+                item.remove();
+                if (categoriesList.children.length === 0) {
+                    categoriesList.innerHTML = '<p class="empty-message">No categories yet. Create one to organize your notes!</p>';
+                }
+                showNotification('Category deleted successfully!', 'success');
+            } catch (error) {
+                console.error('Error deleting category:', error);
+                alert('Error deleting category: ' + error.message);
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const flashMessages = document.querySelector('.flash-messages');
+            const flashEl = document.createElement('div');
+            flashEl.className = `flash flash-${type}`;
+            flashEl.innerHTML = `
+                <span class="flash-text">${escapeHtml(message)}</span>
+                <button type="button" class="flash-close" aria-label="Close notification">&times;</button>
+            `;
+
+            if (flashMessages) {
+                flashMessages.appendChild(flashEl);
+            } else {
+                const container = document.querySelector('.container');
+                const newFlashMessages = document.createElement('aside');
+                newFlashMessages.className = 'flash-messages';
+                newFlashMessages.role = 'alert';
+                newFlashMessages.appendChild(flashEl);
+                container.insertBefore(newFlashMessages, container.firstChild);
+            }
+
+            flashEl.querySelector('.flash-close').addEventListener('click', () => {
+                flashEl.classList.add('flash-hiding');
+                setTimeout(() => flashEl.remove(), 220);
+            });
+
+            setTimeout(() => {
+                if (flashEl.isConnected) {
+                    flashEl.classList.add('flash-hiding');
+                    setTimeout(() => flashEl.remove(), 220);
+                }
+            }, 4500);
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function rgbToHex(rgb) {
+            if (rgb.startsWith('#')) return rgb;
+            
+            const result = rgb.match(/\d+/g);
+            if (!result || result.length < 3) return '#3498db';
+            
+            const r = parseInt(result[0]);
+            const g = parseInt(result[1]);
+            const b = parseInt(result[2]);
+            
+            return '#' + [r, g, b].map(x => {
+                const hex = x.toString(16);
+                return hex.length === 1 ? '0' + hex : hex;
+            }).join('');
+        }
+
+        // Allow Enter key to add category
+        newCategoryNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addCategoryBtn.click();
+            }
         });
     </script>
 {% endblock %}

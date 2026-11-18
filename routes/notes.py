@@ -3,7 +3,7 @@ import os
 from flask import flash, redirect, render_template, request, url_for
 
 from app import db
-from models import Note
+from models import Note, Category
 
 from . import main_bp
 
@@ -44,7 +44,8 @@ def note_new():
 
             if len(title) > 200:
                 flash('Title is too long (max 200 characters)', 'warning')
-                return render_template('note_form.html', note=None)
+                categories = Category.query.all()
+                return render_template('note_form.html', note=None, categories=categories)
 
             note = Note(title=title, content=content, category=category)
             db.session.add(note)
@@ -54,8 +55,11 @@ def note_new():
         except Exception as e:
             db.session.rollback()
             flash(f'Error creating note: {str(e)}', 'warning')
-            return render_template('note_form.html', note=None)
-    return render_template('note_form.html', note=None)
+            categories = Category.query.all()
+            return render_template('note_form.html', note=None, categories=categories)
+    
+    categories = Category.query.all()
+    return render_template('note_form.html', note=None, categories=categories)
 
 
 @main_bp.route('/note/<int:note_id>', methods=['GET', 'POST'])
@@ -69,7 +73,8 @@ def note_edit(note_id):
 
             if len(title) > 200:
                 flash('Title is too long (max 200 characters)', 'warning')
-                return render_template('note_form.html', note=note)
+                categories = Category.query.all()
+                return render_template('note_form.html', note=note, categories=categories)
 
             note.title = title
             note.content = content
@@ -77,7 +82,9 @@ def note_edit(note_id):
             db.session.commit()
             flash('Note updated successfully!', 'success')
             return redirect(url_for('main.index'))
-        return render_template('note_form.html', note=note)
+        
+        categories = Category.query.all()
+        return render_template('note_form.html', note=note, categories=categories)
     except Exception as e:
         flash(f'Error: {str(e)}', 'warning')
         return redirect(url_for('main.index'))
