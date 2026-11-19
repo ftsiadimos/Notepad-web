@@ -1,133 +1,160 @@
-from app import create_app, db
-from flask_migrate import upgrade, stamp
-from sqlalchemy import text
+from pathlib import Path
 import os
+
+from alembic.config import Config
+from alembic.script import ScriptDirectory
+from alembic.util import CommandError
+from flask_migrate import stamp, upgrade
+from sqlalchemy import inspect, text
+from sqlalchemy.schema import CreateColumn
+
+from app import create_app, db
+from models import Note, AppSetting, Category
 
 app = create_app()
 
 
-TARGET_REVISION = "initial_schema"
+MIGRATIONS_DIR = Path(__file__).resolve().parent / "migrations"
+
+
+def _get_script_directory():
+    config = Config(str(MIGRATIONS_DIR / "alembic.ini"))
+    config.set_main_option("script_location", str(MIGRATIONS_DIR))
+    return ScriptDirectory.from_config(config)
+
+
+def _get_migration_head():
+    script = _get_script_directory()
+    heads = script.get_heads()
+    if len(heads) != 1:
+        raise RuntimeError(
+            f"Expected one database migration head, found {len(heads)}: {heads}"
+        )
+    return heads[0]
 
 
 def _get_alembic_revision():
-    """Return current alembic version from DB, or None when unavailable."""
-    result = db.session.execute(text("SELECT version_num FROM alembic_version LIMIT 1")).scalar()
-    return result
+    if "alembic_version" not in inspect(db.engine).get_table_names():
+        return None
+
+    revisions = db.session.execute(
+        text("SELECT version_num FROM alembic_version")
+    ).scalars().all()
+    if len(revisions) > 1:
+        raise RuntimeError(f"Multiple database revisions found: {revisions}")
+    return revisions[0] if revisions else None
 
 
-def _set_alembic_revision(revision):
-    """Force alembic_version to a known good revision."""
-    db.session.execute(text("DELETE FROM alembic_version"))
-    db.session.execute(
-        text("INSERT INTO alembic_version (version_num) VALUES (:revision)"),
-        {"revision": revision},
-    )
-    db.session.commit()
-
-
-def _ensure_migration_state(existing_tables):
-    """Normalize migration state for Docker volumes with stale alembic revision IDs."""
-    has_business_tables = any(table in existing_tables for table in ("note", "app_setting", "category"))
-    has_alembic_table = "alembic_version" in existing_tables
-
-    if not has_business_tables:
-        return
-
-    if not has_alembic_table:
-        print("Tables exist without alembic_version. Creating migration state...")
-        db.session.execute(text("CREATE TABLE IF NOT EXISTS alembic_version (version_num VARCHAR(32) NOT NULL)"))
-        _set_alembic_revision(TARGET_REVISION)
-        print(f"Migration state set to {TARGET_REVISION}")
-        return
-
-    current_revision = _get_alembic_revision()
-    if current_revision != TARGET_REVISION:
-        print(
-            f"Found stale migration revision '{current_revision}'. "
-            f"Resetting migration state to '{TARGET_REVISION}'..."
-        )
-        _set_alembic_revision(TARGET_REVISION)
-        print("Migration state corrected")
-
-
-def _run_upgrade_with_recovery():
-    """Run Flask-Migrate upgrade and convert SystemExit into recoverable error."""
+def _is_known_revision(revision):
+    if revision is None:
+        return False
     try:
-        upgrade()
-        print("Database migrated successfully")
-    except SystemExit as exc:
-        # Flask-Migrate can terminate the process on migration command errors.
-        raise RuntimeError(f"Migration command aborted: {exc}") from exc
+        return _get_script_directory().get_revision(revision) is not None
+    except CommandError:
+        return False
+
+
+def _quote_identifier(identifier):
+    return db.engine.dialect.identifier_preparer.quote(identifier)
+
+
+def _reconcile_current_schema():
+    """Bring databases with removed/unknown revision IDs to the current schema."""
+    inspector = inspect(db.engine)
+    existing_tables = set(inspector.get_table_names())
+
+    model_tables = [
+        db.metadata.tables[name]
+        for name in (
+            Note.__tablename__,
+            AppSetting.__tablename__,
+            Category.__tablename__,
+        )
+    ]
+    db.metadata.create_all(
+        bind=db.engine,
+        tables=[table for table in model_tables if table.name not in existing_tables],
+    )
+
+    inspector.clear_cache()
+    for table in model_tables:
+        existing_columns = {
+            column["name"] for column in inspect(db.engine).get_columns(table.name)
+        }
+        missing_columns = [
+            column for column in table.columns if column.name not in existing_columns
+        ]
+
+        for column in missing_columns:
+            if not column.nullable and column.server_default is None:
+                raise RuntimeError(
+                    f"Cannot safely add required column {table.name}.{column.name} "
+                    "to an existing database without a server default"
+                )
+
+            column_sql = str(
+                CreateColumn(column).compile(dialect=db.engine.dialect)
+            )
+            db.session.execute(
+                text(
+                    f"ALTER TABLE {_quote_identifier(table.name)} "
+                    f"ADD COLUMN {column_sql}"
+                )
+            )
+            db.session.commit()
+
+        inspector = inspect(db.engine)
+        existing_indexes = {
+            index["name"] for index in inspector.get_indexes(table.name)
+        }
+        for index in table.indexes:
+            if index.name not in existing_indexes:
+                index.create(bind=db.engine)
+
+        final_columns = {
+            column["name"] for column in inspect(db.engine).get_columns(table.name)
+        }
+        missing = {column.name for column in table.columns} - final_columns
+        if missing:
+            raise RuntimeError(
+                f"Schema reconciliation failed for {table.name}; missing: "
+                f"{sorted(missing)}"
+            )
 
 
 def init_db():
-    """Initialize database by running migrations."""
+    """Bring the database to the sole current migration head."""
     with app.app_context():
-        try:
-            inspector = db.inspect(db.engine)
-            existing_tables = inspector.get_table_names()
+        current_revision = _get_alembic_revision()
+        head_revision = _get_migration_head()
+        revision_is_known = _is_known_revision(current_revision)
 
-            _ensure_migration_state(existing_tables)
-            _run_upgrade_with_recovery()
+        if revision_is_known:
+            upgrade(revision=head_revision)
+        else:
+            print(
+                f"Database revision '{current_revision}' is not present in this "
+                f"image. Reconciling the existing schema with {head_revision}..."
+            )
 
-        except RuntimeError as e:
-            error_msg = str(e).lower()
+        _reconcile_current_schema()
+        if not revision_is_known:
+            stamp(revision=head_revision, purge=True)
 
-            if 'already exists' in error_msg or 'table' in error_msg:
-                print("Tables already exist. Stamping migration state...")
-                try:
-                    stamp(revision=TARGET_REVISION)
-                    print("Database stamped successfully")
-                except (RuntimeError, SystemExit, Exception) as stamp_error:
-                    print(f"Warning: Could not stamp database: {stamp_error}")
-                    print("Continuing anyway...")
+        final_revision = _get_alembic_revision()
+        if final_revision != head_revision:
+            raise RuntimeError(
+                f"Database migration did not reach {head_revision}; "
+                f"revision is {final_revision}"
+            )
+        print(f"Database migrated successfully to {final_revision}")
 
-            elif 'locate revision' in error_msg or 'can\'t locate' in error_msg:
-                print(f"Migration revision not found: {e}")
-                print("Attempting recovery...")
-                try:
-                    db.create_all()
-                    _set_alembic_revision(TARGET_REVISION)
-                    print("Database recovered successfully")
-                except Exception as recovery_error:
-                    print(f"Error recovering database: {recovery_error}")
-                    print("Continuing with basic setup...")
-            else:
-                print(f"Database migration error: {e}")
-                try:
-                    print("Attempting fallback: creating all tables...")
-                    db.create_all()
-                    if "alembic_version" not in db.inspect(db.engine).get_table_names():
-                        db.session.execute(
-                            text("CREATE TABLE IF NOT EXISTS alembic_version (version_num VARCHAR(32) NOT NULL)")
-                        )
-                        db.session.commit()
-                    _set_alembic_revision(TARGET_REVISION)
-                    print("Tables created successfully")
-                except Exception as fallback_error:
-                    print(f"Error creating tables: {fallback_error}")
-                    exit(1)
-        except Exception as e:
-            print(f"Unexpected database migration error: {e}")
-            try:
-                db.create_all()
-                if "alembic_version" not in db.inspect(db.engine).get_table_names():
-                    db.session.execute(
-                        text("CREATE TABLE IF NOT EXISTS alembic_version (version_num VARCHAR(32) NOT NULL)")
-                    )
-                    db.session.commit()
-                _set_alembic_revision(TARGET_REVISION)
-                print("Fallback database initialization completed")
-            except Exception as fallback_error:
-                print(f"Error creating tables during fallback: {fallback_error}")
-                exit(1)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     init_db()
-    
-    # Run the application
-    port = int(os.environ.get('FLASK_RUN_PORT', os.environ.get('PORT', 5223)))
-    host = os.environ.get('FLASK_RUN_HOST', '0.0.0.0')
-    debug = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
-    
+
+    port = int(os.environ.get("FLASK_RUN_PORT", os.environ.get("PORT", 5223)))
+    host = os.environ.get("FLASK_RUN_HOST", "0.0.0.0")
+    debug = os.environ.get("FLASK_DEBUG", "False").lower() == "true"
+
     app.run(host=host, port=port, debug=debug)
