@@ -16,6 +16,8 @@ from reportlab.platypus import (
     Paragraph,
     SimpleDocTemplate,
     Spacer,
+    Table,
+    TableStyle,
     XPreformatted,
 )
 
@@ -137,7 +139,7 @@ def inline_html_to_reportlab(node, tag_type, string_type, fonts):
     if tag_name == 'u':
         return f'<u>{children}</u>'
     if tag_name in ('s', 'strike', 'del'):
-        return children
+        return f'<strike>{children}</strike>'
     if tag_name == 'br':
         return '<br/>'
     if tag_name == 'code':
@@ -147,6 +149,32 @@ def inline_html_to_reportlab(node, tag_type, string_type, fonts):
         if href:
             return f'{children} ({escape(href)})'
         return children
+    if tag_name in ('span', 'mark'):
+        styles = {}
+        style_text = node.get('style')
+        if isinstance(style_text, str):
+            for part in style_text.split(';'):
+                if ':' not in part:
+                    continue
+                key, value = part.split(':', 1)
+                styles[key.strip()] = value.strip()
+        attributes = []
+        color = styles.get('color')
+        background = styles.get('background-color') or styles.get('background')
+        if color:
+            attributes.append(f'color="{escape(color.strip())}"')
+        if background:
+            attributes.append(f'backColor="{escape(background.strip())}"')
+        elif tag_name == 'mark':
+            attributes.append('backColor="#ffff00"')
+
+        classes = node.get('class') or []
+        size_names = {'ql-size-small': 8, 'ql-size-large': 14, 'ql-size-huge': 20}
+        size = next((size_names[name] for name in classes if name in size_names), None)
+        if size:
+            attributes.append(f'size="{size}"')
+        if attributes:
+            return f'<font {" ".join(attributes)}>{children}</font>'
 
     return children
 
@@ -235,6 +263,9 @@ def html_to_flowables(html_text, styles, fonts):
     container = soup.body if soup.body else soup
     flowables = []
 
+    def make_paragraph(content, style):
+        return Paragraph(content, style)
+
     for node in container.children:
         if isinstance(node, NavigableString):
             text = str(node).strip()
@@ -258,6 +289,57 @@ def html_to_flowables(html_text, styles, fonts):
             )
             flowables.append(Paragraph(markup, style))
             flowables.append(Spacer(1, 4))
+            continue
+
+        if name == 'div' and 'ql-code-block-container' in (node.get('class') or []):
+            lines = [
+                strip_icons_for_pdf(line.get_text()).rstrip()
+                for line in node.find_all(class_='ql-code-block', recursive=False)
+            ]
+            if not lines:
+                lines = strip_icons_for_pdf(node.get_text('\n')).splitlines()
+            flowables.append(XPreformatted('\n'.join(lines), code_style))
+            flowables.append(Spacer(1, 4))
+            continue
+
+        if name == 'table':
+            table_rows = []
+            for row in node.find_all('tr', recursive=True):
+                cells = []
+                for cell in row.find_all(['th', 'td'], recursive=False):
+                    markup = inline_html_to_reportlab(
+                        cell, Tag, NavigableString, fonts
+                    ).strip() or '&nbsp;'
+                    cells.append(make_paragraph(markup, body_style))
+                if cells:
+                    table_rows.append(cells)
+
+            if table_rows:
+                max_columns = max(len(row) for row in table_rows)
+                for row in table_rows:
+                    row.extend(
+                        [make_paragraph('&nbsp;', body_style)]
+                        * (max_columns - len(row))
+                    )
+
+                available_width = 522
+                table = Table(
+                    table_rows,
+                    colWidths=[available_width / max_columns] * max_columns,
+                    repeatRows=1,
+                )
+                table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e9ecef')),
+                    ('FONTNAME', (0, 0), (-1, 0), fonts['bold']),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#b7bcc2')),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 6),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+                    ('TOPPADDING', (0, 0), (-1, -1), 4),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ]))
+                flowables.append(table)
+                flowables.append(Spacer(1, 8))
             continue
 
         if name in ('p', 'div'):

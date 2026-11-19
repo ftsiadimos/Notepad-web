@@ -24,6 +24,21 @@ def _parse_css_style(style_str):
     return attrs
 
 
+def _css_color_to_hex(color):
+    if not color:
+        return None
+    color = color.strip()
+    if re.fullmatch(r'#[0-9a-fA-F]{6}', color):
+        return color[1:]
+    rgb_match = re.fullmatch(
+        r'rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,[^)]*)?\)',
+        color,
+    )
+    if rgb_match and all(int(value) <= 255 for value in rgb_match.groups()):
+        return ''.join(f'{int(value):02X}' for value in rgb_match.groups())
+    return None
+
+
 def _add_run_with_formatting(paragraph, text, attrs):
     """Add a run to a paragraph with formatting applied."""
     run = paragraph.add_run(text)
@@ -36,23 +51,15 @@ def _add_run_with_formatting(paragraph, text, attrs):
     if attrs.get('strike'):
         run.font.strike = True
     if attrs.get('color'):
-        color = attrs['color']
-        if color.startswith('#') and len(color) == 7:
-            try:
-                run.font.color.rgb = RGBColor.from_string(color)
-            except Exception:
-                pass
-        elif color in ('rgb(0,0,0)', '#000000', 'black'):
-            run.font.color.rgb = RGBColor(0, 0, 0)
-        elif color in ('rgb(255,255,255)', '#ffffff', 'white'):
-            run.font.color.rgb = RGBColor(255, 255, 255)
+        color = _css_color_to_hex(attrs['color'])
+        if color:
+            run.font.color.rgb = RGBColor.from_string(color)
     if attrs.get('background'):
-        bg = attrs['background']
-        if bg.startswith('#') and len(bg) == 7:
-            try:
-                run.font.highlight_color = bg
-            except Exception:
-                pass
+        bg = _css_color_to_hex(attrs['background'])
+        if bg:
+            shading = OxmlElement('w:shd')
+            shading.set(qn('w:fill'), bg)
+            run._r.get_or_add_rPr().append(shading)
     if attrs.get('font'):
         run.font.name = attrs['font']
     if attrs.get('size'):
@@ -87,78 +94,68 @@ def _add_hyperlink(doc, paragraph, href, text):
     paragraph._p.append(hyperlink)
 
 
-def _process_inline_elements(element, paragraph, doc):
-    """Process inline HTML elements and add them to the paragraph with formatting."""
+def _process_inline_elements(element, paragraph, doc, inherited_attrs=None):
+    """Process inline HTML elements and preserve nested formatting."""
+    inherited_attrs = inherited_attrs or {}
     for child in element.children:
         if isinstance(child, NavigableString):
             text = str(child)
             if text:
-                paragraph.add_run(text)
+                _add_run_with_formatting(paragraph, text, inherited_attrs)
         elif isinstance(child, Tag):
             tag = child.name.lower()
             style = _parse_css_style(child.get('style', ''))
-            attrs = {}
+            attrs = dict(inherited_attrs)
 
             if tag in ('strong', 'b'):
                 attrs['bold'] = True
-                _process_inline_elements(child, paragraph, doc)
             elif tag in ('em', 'i'):
                 attrs['italic'] = True
-                _process_inline_elements(child, paragraph, doc)
             elif tag == 'u':
                 attrs['underline'] = True
-                _process_inline_elements(child, paragraph, doc)
             elif tag in ('s', 'strike', 'del'):
                 attrs['strike'] = True
-                _process_inline_elements(child, paragraph, doc)
             elif tag == 'a':
                 href = child.get('href', '#')
                 text = child.get_text()
                 _add_hyperlink(doc, paragraph, href, text)
+                continue
             elif tag == 'span':
-                if 'font-weight: bold' in style or 'font-weight:bold' in style:
+                font_weight = style.get('font-weight', '')
+                if font_weight == 'bold' or (
+                    font_weight.isdigit() and int(font_weight) >= 600
+                ):
                     attrs['bold'] = True
-                if 'font-style: italic' in style or 'font-style:italic' in style:
+                if style.get('font-style') == 'italic':
                     attrs['italic'] = True
-                if 'text-decoration: underline' in style or 'text-decoration:underline' in style:
+                decoration = style.get('text-decoration', '')
+                if 'underline' in decoration:
                     attrs['underline'] = True
-                if 'text-decoration: line-through' in style or 'text-decoration:line-through' in style:
+                if 'line-through' in decoration:
                     attrs['strike'] = True
-                if 'color:' in style:
-                    color = style.split('color:')[1].split(';')[0].strip()
-                    attrs['color'] = color
-                if 'background-color:' in style:
-                    bg = style.split('background-color:')[1].split(';')[0].strip()
-                    attrs['background'] = bg
-                elif 'background:' in style and 'color' not in style.split('background:')[1].split(';')[0].strip():
-                    bg = style.split('background:')[1].split(';')[0].strip()
-                    attrs['background'] = bg
-                if 'font-family:' in style:
-                    font = style.split('font-family:')[1].split(';')[0].strip().strip("'\"")
-                    attrs['font'] = font
-                if 'font-size:' in style:
-                    size = style.split('font-size:')[1].split(';')[0].strip()
-                    attrs['size'] = size
-                text = child.get_text()
-                if text:
-                    _add_run_with_formatting(paragraph, text, attrs)
+                if 'color' in style:
+                    attrs['color'] = style['color']
+                if 'background-color' in style:
+                    attrs['background'] = style['background-color']
+                elif 'background' in style:
+                    attrs['background'] = style['background']
+                if 'font-family' in style:
+                    attrs['font'] = style['font-family'].strip("'\"")
+                if 'font-size' in style:
+                    attrs['size'] = re.sub(r'\D', '', style['font-size'])
             elif tag == 'mark':
-                # <mark> highlights text with a yellow background
-                text = child.get_text()
-                if text:
-                    run = _add_run_with_formatting(paragraph, text, attrs)
-                    run.font.highlight_color = 'FFFF00'  # yellow highlight
+                attrs['background'] = '#ffff00'
             elif tag == 'br':
                 paragraph.add_run('\n')
+                continue
             elif tag == 'code':
-                # Inline code - use monospace
                 text = child.get_text()
-                run = paragraph.add_run(text)
+                run = _add_run_with_formatting(paragraph, text, attrs)
                 run.font.name = 'Courier New'
                 run.font.size = Pt(10)
-            else:
-                # Recurse for nested elements
-                _process_inline_elements(child, paragraph, doc)
+                continue
+
+            _process_inline_elements(child, paragraph, doc, attrs)
 
 
 def _add_paragraph_with_formatting(element, doc):
@@ -168,16 +165,88 @@ def _add_paragraph_with_formatting(element, doc):
     return p
 
 
-def _add_list(element, doc, ordered=False):
-    """Add an ordered or unordered list (always using bullets/dots)."""
+def _add_list(element, doc, ordered=False, level=0):
+    """Add an ordered or unordered list."""
     for child in element.children:
         if isinstance(child, Tag) and child.name and child.name.lower() == 'li':
-            p = doc.add_paragraph(style='List Bullet')
-            _process_inline_elements(child, p, doc)
-            # Handle nested lists within li
+            style = 'List Number' if ordered else 'List Bullet'
+            if level:
+                style += f' {min(level + 1, 9)}'
+            p = doc.add_paragraph(style=style)
             for nested in child.children:
                 if isinstance(nested, Tag) and nested.name and nested.name.lower() in ('ul', 'ol'):
-                    _add_list(nested, doc, ordered=(nested.name.lower() == 'ol'))
+                    continue
+                if isinstance(nested, NavigableString):
+                    if nested.strip():
+                        _add_run_with_formatting(p, str(nested), {})
+                else:
+                    _process_inline_elements(nested, p, doc)
+            for nested in child.children:
+                if isinstance(nested, Tag) and nested.name and nested.name.lower() in ('ul', 'ol'):
+                    _add_list(
+                        nested,
+                        doc,
+                        ordered=(nested.name.lower() == 'ol'),
+                        level=level + 1,
+                    )
+
+
+def _set_paragraph_alignment(paragraph, element):
+    """Apply alignment from Quill classes or CSS."""
+    classes = element.get('class') or []
+    style = _parse_css_style(element.get('style', ''))
+    alignment = style.get('text-align')
+    if 'ql-align-center' in classes or alignment == 'center':
+        paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    elif 'ql-align-right' in classes or alignment == 'right':
+        paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    elif 'ql-align-justify' in classes or alignment == 'justify':
+        paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+
+
+def _add_table(element, doc):
+    rows = element.find_all('tr', recursive=True)
+    if not rows:
+        return
+
+    width = max((len(row.find_all(['th', 'td'], recursive=False)) for row in rows), default=0)
+    if not width:
+        return
+
+    table = doc.add_table(rows=0, cols=width)
+    table.style = 'Table Grid'
+    for row in rows:
+        cells = row.find_all(['th', 'td'], recursive=False)
+        if not cells:
+            continue
+        word_row = table.add_row()
+        for index, cell in enumerate(cells):
+            paragraph = word_row.cells[index].paragraphs[0]
+            _process_inline_elements(cell, paragraph, doc)
+            if cell.name.lower() == 'th':
+                for run in paragraph.runs:
+                    run.bold = True
+
+
+def _add_code_block(element, doc):
+    if 'ql-code-block-container' in (element.get('class') or []):
+        lines = [
+            child.get_text()
+            for child in element.children
+            if isinstance(child, Tag)
+            and 'ql-code-block' in (child.get('class') or [])
+        ]
+        text = '\n'.join(lines)
+    else:
+        code = element.find('code')
+        text = code.get_text() if code else element.get_text()
+
+    paragraph = doc.add_paragraph(text)
+    paragraph.paragraph_format.left_indent = Pt(24)
+    paragraph.paragraph_format.right_indent = Pt(24)
+    for run in paragraph.runs:
+        run.font.name = 'Courier New'
+        run.font.size = Pt(10)
 
 
 def _parse_quill_html(html_content, doc):
@@ -197,42 +266,30 @@ def _parse_quill_html(html_content, doc):
             tag = element.name.lower()
 
             if tag == 'p':
-                _add_paragraph_with_formatting(element, doc)
+                paragraph = _add_paragraph_with_formatting(element, doc)
+                _set_paragraph_alignment(paragraph, element)
             elif tag in ('h1', 'h2', 'h3', 'h4', 'h5', 'h6'):
                 level = int(tag[1])
-                heading = doc.add_heading(element.get_text(), level=min(level, 6))
-                style = _parse_css_style(element.get('style', ''))
-                if 'text-align: center' in style:
-                    heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                elif 'text-align: right' in style:
-                    heading.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-                elif 'text-align: justify' in style:
-                    heading.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+                heading = doc.add_heading(level=min(level, 6))
+                _process_inline_elements(element, heading, doc)
+                _set_paragraph_alignment(heading, element)
             elif tag == 'blockquote':
-                p = doc.add_paragraph(element.get_text(), style='Quote')
+                p = doc.add_paragraph(style='Quote')
+                _process_inline_elements(element, p, doc)
                 p.paragraph_format.left_indent = Pt(24)
+                _set_paragraph_alignment(p, element)
             elif tag == 'pre':
-                code = element.find('code')
-                code_text = code.get_text() if code else element.get_text()
-                p = doc.add_paragraph(code_text)
-                p.paragraph_format.left_indent = Pt(24)
-                p.paragraph_format.right_indent = Pt(24)
-                for run in p.runs:
-                    run.font.name = 'Courier New'
-                    run.font.size = Pt(10)
+                _add_code_block(element, doc)
             elif tag == 'div' and 'ql-code-block-container' in (element.get('class') or []):
-                # Quill code block container
-                code_text = element.get_text()
-                p = doc.add_paragraph(code_text)
-                p.paragraph_format.left_indent = Pt(24)
-                p.paragraph_format.right_indent = Pt(24)
-                for run in p.runs:
-                    run.font.name = 'Courier New'
-                    run.font.size = Pt(10)
+                _add_code_block(element, doc)
+            elif tag == 'table':
+                _add_table(element, doc)
             elif tag == 'ul':
                 _add_list(element, doc, ordered=False)
             elif tag == 'ol':
                 _add_list(element, doc, ordered=True)
+            elif tag in ('tbody', 'thead', 'tr', 'td'):
+                _add_paragraph_with_formatting(element, doc)
             elif tag == 'br':
                 doc.add_paragraph()
 
