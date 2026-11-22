@@ -57,6 +57,7 @@
                 <div class="ai-helper-actions">
                     <button type="button" id="aiGenerateBtn" class="btn btn-primary">Review & Recommend Changes</button>
                     <button type="button" id="aiApplyBtn" class="btn btn-export" disabled>Apply Recommendation (Replace)</button>
+                    <button type="button" id="aiCleanBtn" class="btn btn-secondary" disabled>Clean AI Recommendation</button>
                 </div>
 
                 <div id="aiStatus" class="ai-status" aria-live="polite"></div>
@@ -190,6 +191,7 @@
         const aiPromptEl = document.getElementById('aiPrompt');
         const aiGenerateBtn = document.getElementById('aiGenerateBtn');
         const aiApplyBtn = document.getElementById('aiApplyBtn');
+        const aiCleanBtn = document.getElementById('aiCleanBtn');
         const aiStatusEl = document.getElementById('aiStatus');
         const aiResponseEl = document.getElementById('aiResponse');
         let aiLastResponse = '';
@@ -223,7 +225,9 @@
                 aiLastResponse = data.response || '';
                 aiResponseEl.innerHTML = aiLastResponse;
                 aiResponseEl.hidden = false;
-                aiApplyBtn.disabled = !aiLastResponse;
+                const hasResponse = !!aiLastResponse;
+                aiApplyBtn.disabled = !hasResponse;
+                aiCleanBtn.disabled = !hasResponse;
                 setAiStatus('Recommendation ready. Apply to replace current note content.');
             } catch (error) {
                 setAiStatus(error.message || 'AI request failed.', true);
@@ -240,10 +244,21 @@
             quill.setContents(delta, 'user');
             quill.setSelection(quill.getLength(), 0, 'silent');
             setAiStatus('Recommendation applied.');
+            cleanAiRecommendation();
+        }
+
+        function cleanAiRecommendation() {
+            aiLastResponse = '';
+            aiResponseEl.innerHTML = '';
+            aiResponseEl.hidden = true;
+            aiApplyBtn.disabled = true;
+            aiCleanBtn.disabled = true;
+            setAiStatus('');
         }
 
         aiGenerateBtn.addEventListener('click', generateAiSuggestion);
         aiApplyBtn.addEventListener('click', applyAiSuggestion);
+        aiCleanBtn.addEventListener('click', cleanAiRecommendation);
 
         // Flash notifications: auto-hide and manual close
         document.querySelectorAll('.flash').forEach((flashEl) => {
