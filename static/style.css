@@ -1,72 +1,72 @@
 /* ===== CSS Custom Properties (Light Theme - Default) ===== */
 :root {
-    /* Base palette — clean, modern whites */
-    --bg-primary: #f8fafc;
-    --bg-secondary: #ffffff;
-    --bg-tertiary: #e8eef4;
-    --bg-elevated: #f0f4f8;
+    /* Base palette — warm honey-sand tones */
+    --bg-primary: #f7f0e8;
+    --bg-secondary: #faf6f0;
+    --bg-tertiary: #ede5d9;
+    --bg-elevated: #f2ece3;
     
-    /* Text colors — clean, readable */
-    --text-primary: #4a5568;
-    --text-secondary: #68728a;
-    --text-muted: #a0aec1;
-    --text-heading: #1e3a8a;
+    /* Text colors — warm dark brown-gray */
+    --text-primary: #4a3f35;
+    --text-secondary: #6b5e52;
+    --text-muted: #a89a8c;
+    --text-heading: #3a2e24;
     
-    /* Borders — subtle, clean */
-    --border-color: #c8d0e0;
+    /* Borders — warm sand */
+    --border-color: #ddd3c5;
     --border-focus: #5b8cd6;
-    --header-border: #c8d0e0;
+    --header-border: #ddd3c5;
     
-    /* Shadows — soft, modern */
-    --shadow-color: rgba(0, 0, 0, 0.06);
-    --shadow-hover: rgba(0, 0, 0, 0.10);
+    /* Shadows — soft, warm */
+    --shadow-color: rgba(74, 63, 53, 0.06);
+    --shadow-hover: rgba(74, 63, 53, 0.10);
     
     /* Interactive elements */
-    --toggle-bg: #e8eef4;
+    --toggle-bg: #ede5d9;
     --toggle-active: #5b8cd6;
-    --toggle-knob: #ffffff;
+    --toggle-knob: #faf6f0;
     
     /* Code blocks */
-    --code-bg: #f4f7fa;
+    --code-bg: #f2ece3;
     
-    /* Card hover states — subtle, modern */
-    --card-hover-bg: #e8eef4;
+    /* Card hover states — warm, inviting */
+    --card-hover-bg: #ede5d9;
     --card-hover-text: #5b8cd6;
-    --card-hover-bg-hover: #f0f4f8;
+    --card-hover-bg-hover: #f2ece3;
     
     /* Focus ring */
     --focus-outline: #5b8cd6;
     
-    /* Flash messages — clean, readable */
-    --flash-success-bg: #d4edda;
-    --flash-success-text: #155724;
-    --flash-success-border: #c3e6cb;
-    --flash-warning-bg: #fff3cd;
-    --flash-warning-text: #856404;
-    --flash-warning-border: #ffeeba;
+    /* Flash messages — warm, readable */
+    --flash-success-bg: #d4e4d0;
+    --flash-success-text: #2e5a1e;
+    --flash-success-border: #b8d0b0;
+    --flash-warning-bg: #f0e8d0;
+    --flash-warning-text: #7a6c10;
+    --flash-warning-border: #ddd0a8;
     
     /* Quill editor */
-    --quill-border: #c8d0e0;
-    --quill-toolbar-bg: #e8f4f8;
+    --quill-border: #ddd3c5;
+    --quill-toolbar-bg: #f2ece3;
     --quill-toolbar-text: #2980b9;
-    --quill-toolbar-hover-bg: #d0e8f0;
-    --quill-strip-bg: #ffe4e1;
-    --quill-strip-text: #e74c3c;
-    --quill-strip-hover-bg: #ffcccc;
+    --quill-toolbar-hover-bg: #e8dfd3;
+    --quill-strip-bg: #fde4dd;
+    --quill-strip-text: #c0392b;
+    --quill-strip-hover-bg: #f7d0c8;
     
     /* AI helper */
-    --ai-bg: #f8fcff;
-    --ai-border: #d8e9f6;
-    --ai-title: #1f3a57;
-    --ai-subtitle: #4b5563;
+    --ai-bg: #faf6f0;
+    --ai-border: #ddd3c5;
+    --ai-title: #3a2e24;
+    --ai-subtitle: #6b5e52;
     --ai-status: #1d4ed8;
-    --ai-response-bg: #ffffff;
-    --ai-response-border: #d1d5db;
+    --ai-response-bg: #faf6f0;
+    --ai-response-border: #ddd3c5;
     
     /* Misc */
-    --placeholder-color: #a0aec1;
-    --placeholder-muted: #a0aec1;
-    --help-color: #6b7280;
+    --placeholder-color: #a89a8c;
+    --placeholder-muted: #a89a8c;
+    --help-color: #7d7064;
 }
 
 /* ===== Dark Theme ===== */
