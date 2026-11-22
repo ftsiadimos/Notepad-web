@@ -106,6 +106,19 @@
             </div>
         </section>
 
+        <section class="backup-section">
+            <h2>💾 Backup & Restore</h2>
+            <div class="backup-buttons">
+                <a href="{{ url_for('main.settings_export') }}" class="btn btn-primary">📤 Export Notes (JSON)</a>
+                <div class="import-form">
+                    <label for="import_file" class="btn btn-secondary">📥 Import Notes (JSON)</label>
+                    <input type="file" id="import_file" accept=".json" style="display: none;">
+                    <span id="import_file_name" class="import-file-name"></span>
+                </div>
+            </div>
+            <small class="field-help">Export all your notes, categories, and settings as a JSON backup file. Import a previously exported file to restore your data.</small>
+        </section>
+
         <!-- Edit Category Modal -->
         <div id="edit_category_modal" class="modal" style="display: none;">
             <div class="modal-content">
@@ -420,5 +433,55 @@
                 addCategoryBtn.click();
             }
         });
+
+        // Import Notes - show selected file name and handle upload
+        const importFileInput = document.getElementById('import_file');
+        const importFileNameSpan = document.getElementById('import_file_name');
+        if (importFileInput) {
+            importFileInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                if (!file.name.endsWith('.json')) {
+                    alert('Please select a JSON backup file.');
+                    return;
+                }
+
+                // Show the selected file name
+                importFileNameSpan.textContent = `Selected: ${file.name}`;
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    const response = await fetch('/settings/import', {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    if (!response.ok) {
+                        let errorMsg = 'Import failed. Please check the file and try again.';
+                        try {
+                            const errorData = await response.json();
+                            errorMsg = errorData.error || errorMsg;
+                        } catch (e) {
+                            // If we can't parse the error, use the default message
+                        }
+                        showNotification(errorMsg, 'error');
+                        return;
+                    }
+
+                    const data = await response.json();
+                    if (data.success) {
+                        showNotification(data.message || 'Import successful!', 'success');
+                    } else {
+                        showNotification(data.error || 'Import failed.', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error importing notes:', error);
+                    showNotification('Error importing notes: ' + error.message, 'error');
+                }
+            });
+        }
     </script>
 {% endblock %}

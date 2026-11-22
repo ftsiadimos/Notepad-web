@@ -1,10 +1,11 @@
-import os
 import json
+import os
+import time
 
-from flask import flash, redirect, render_template, request, url_for, jsonify
+from flask import flash, jsonify, redirect, render_template, request, send_file, url_for
 
 from app import db
-from models import Category
+from models import AppSetting, Category, Note
 from utils.helpers import (
     DEFAULT_OLLAMA_MODEL,
     DEFAULT_OLLAMA_URL,
@@ -162,3 +163,110 @@ def api_delete_category(category_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+
+@main_bp.route('/settings/export')
+def settings_export():
+    """Export all notes, categories, and settings as a JSON backup file."""
+    try:
+        notes = Note.query.all()
+        categories = Category.query.all()
+        settings = AppSetting.query.all()
+
+        backup_data = {
+            'notes': [note.to_dict() for note in notes],
+            'categories': [cat.to_dict() for cat in categories],
+            'settings': [{'key': s.key, 'value': s.value} for s in settings],
+            'exported_at': time.strftime('%Y-%m-%dT%H:%M:%S'),
+        }
+
+        json_str = json.dumps(backup_data, indent=2)
+        from io import BytesIO
+        buffer = BytesIO(json_str.encode('utf-8'))
+        buffer.seek(0)
+
+        return send_file(
+            buffer,
+            mimetype='application/json',
+            as_attachment=True,
+            download_name=f'notepad-backup-{time.strftime("%Y-%m-%d")}.json',
+        )
+    except Exception as e:
+        flash(f'Error exporting notes: {str(e)}', 'error')
+        return redirect(url_for('main.settings'))
+
+
+@main_bp.route('/settings/import', methods=['POST'])
+def settings_import():
+    """Import notes, categories, and settings from an uploaded JSON backup file."""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file provided.'}), 400
+
+        file = request.files['file']
+        if not file or not file.filename or not file.filename.endswith('.json'):
+            return jsonify({'error': 'Please upload a valid JSON backup file.'}), 400
+
+        try:
+            backup_data = json.load(file)
+        except json.JSONDecodeError:
+            return jsonify({'error': 'Invalid JSON file.'}), 400
+
+        count_notes = 0
+        count_categories = 0
+        count_settings = 0
+
+        # Import categories
+        for cat_data in backup_data.get('categories', []):
+            try:
+                name = cat_data.get('name', '').strip()
+                color = cat_data.get('color', '#3498db')
+                if not name:
+                    continue
+                existing = Category.query.filter_by(name=name).first()
+                if existing:
+                    existing.color = color
+                    count_categories += 1
+                else:
+                    category = Category(name=name, color=color)
+                    db.session.add(category)
+                    count_categories += 1
+            except Exception:
+                pass
+
+        # Import notes
+        for note_data in backup_data.get('notes', []):
+            try:
+                title = note_data.get('title', 'Untitled').strip() or 'Untitled'
+                content = note_data.get('content', '').strip()
+                category = note_data.get('category', None)
+                note = Note(title=title, content=content, category=category)
+                db.session.add(note)
+                count_notes += 1
+            except Exception:
+                pass
+
+        # Import settings
+        for setting_data in backup_data.get('settings', []):
+            try:
+                key = setting_data.get('key', '').strip()
+                value = setting_data.get('value', '')
+                if key:
+                    set_setting_value(key, value)
+                    count_settings += 1
+            except Exception:
+                pass
+
+        db.session.commit()
+        message = (
+            f'Imported {count_notes} note{"s" if count_notes != 1 else ""}, '
+            f'{count_categories} category/categories, '
+            f'and {count_settings} setting(s) successfully!'
+        )
+        flash(message, 'success')
+        return jsonify({'success': True, 'message': message})
+    except Exception as e:
+        db.session.rollback()
+        error_msg = f'Error importing notes: {str(e)}'
+        flash(error_msg, 'error')
+        return jsonify({'error': error_msg}), 500
